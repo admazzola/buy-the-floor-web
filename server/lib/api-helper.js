@@ -23,14 +23,22 @@
         }
 
         //http://localhost:3000/api/v1/somestuff
-        static async handleApiRequest(request, mongoInterface, wolfpackInterface){
+        static async handleApiRequest(type,request, mongoInterface, wolfpackInterface){
             console.log('got api request', request.params )
 
-            if(request.params['query'].toLowerCase() == 'overview' ){
+            if(!type){
+                if(request.params['query'].toLowerCase() == 'overview' ){
 
 
-                return await APIHelper.getOverview(mongoInterface,wolfpackInterface)
+                    return await APIHelper.getOverview(mongoInterface,wolfpackInterface)
+                }
             }
+
+            if(type == 'userbids'){
+
+                return await APIHelper.getActiveBidsOfUser(request.params['useraddress'],mongoInterface)
+            }
+           
 
             return 'This is the API'
         }
@@ -58,6 +66,14 @@
             return response
         }
 
+        static async getActiveBidsOfUser(userAddress, mongoInterface){
+
+            userAddress = userAddress.toLowerCase()
+
+            let bidsArray = await mongoInterface.findAllSortedWithLimit('bidpackets',{bidderAddress: userAddress }, {}, 100 )
+
+            return {activeBids: bidsArray}
+        }
         
         static async getDataForToken(tokenAddress, wolfpackInterface ){
 

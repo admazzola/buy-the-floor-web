@@ -67,7 +67,15 @@ export default class PacketReceiver  {
 
       app.get('/api/v1/:query', async (req, res) => {         
           
-        let response = await APIHelper.handleApiRequest( req , this.mongoInterface, this.wolfpackInterface )
+        let response = await APIHelper.handleApiRequest(null, req , this.mongoInterface, this.wolfpackInterface )
+
+        res.send(response)
+      })
+
+
+      app.get('/api/v1/bids/:useraddress', async (req, res) => {         
+          
+        let response = await APIHelper.handleApiRequest('userbids', req , this.mongoInterface, this.wolfpackInterface )
 
         res.send(response)
       })
