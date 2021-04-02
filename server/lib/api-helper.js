@@ -2,6 +2,8 @@
     import Web3Helper from './web3-helper.js'
     import BidPacketUtils from '../../src/js/bidpacket-utils.js'
 
+    import BigNumber from 'bignumber.js' 
+
     import web3utils from 'web3-utils'
     
     import FileHelper from './file-helper.js'
@@ -68,14 +70,25 @@
 
         static async getUserBalanceApprovalForToken(userAddress, tokenAddress, spenderAddress, wolfpackInterface ){
 
-            contractAddress = web3utils.toChecksumAddress(contractAddress)
+            tokenAddress = web3utils.toChecksumAddress(tokenAddress)
             userAddress = web3utils.toChecksumAddress(userAddress)
             spenderAddress = web3utils.toChecksumAddress(spenderAddress)
 
+            //console.log('find approve', {contractAddress: tokenAddress, ownerAddress: userAddress , spenderAddress:  spenderAddress })
             let balanceData = await wolfpackInterface.getMongo().findOne('erc20_balances',{contractAddress: tokenAddress, accountAddress: userAddress })
-            let approvedData = await wolfpackInterface.getMongo().findOne('erc20_approvals',{contractAddress: tokenAddress, ownerAddress: userAddress , spenderAddress:  spenderAddress })
+            let approvedData = await wolfpackInterface.getMongo().findOne('erc20_approval',{contractAddress: tokenAddress, ownerAddress: userAddress , spenderAddress:  spenderAddress })
 
-            return { balance: balanceData.amount, approved: approvedData.amount }
+            let results = {balance:0, approved: 0}
+
+            if(balanceData){
+                results.balance = new BigNumber(balanceData.amount)
+            }
+            if(approvedData){
+                results.approved = new BigNumber(approvedData.amount)
+            }
+
+
+            return results
         }
     
          

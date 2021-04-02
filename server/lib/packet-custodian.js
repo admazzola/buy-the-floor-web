@@ -11,13 +11,15 @@
 
   */
 
+    import BigNumber from 'bignumber.js' 
+
 import Web3Helper from './web3-helper.js'
 import BidPacketUtils from '../../src/js/bidpacket-utils.js'
 
 import FileHelper from './file-helper.js'
 import APIHelper from './api-helper.js'
 
-const GLOBAL_RATE_SCALE = 60
+const GLOBAL_RATE_SCALE = 40
 
 const BTFContractABI = FileHelper.readJSONFile('./src/contracts/BuyTheFloorABI_2.json')
 const ERC20ContractABI = FileHelper.readJSONFile('./src/contracts/ERC20ABI.json')
@@ -124,7 +126,7 @@ export default class PacketCustodian  {
 
         let web3 = this.web3 
 
-         
+         var isNowSuspended = false
 
         let chainId = this.chainId 
         let blockNumber = this.blockNumber
@@ -165,22 +167,27 @@ export default class PacketCustodian  {
         //let buyerAddress = packet.bidderAddress 
 
 
-        let tokenData = APIHelper.getDataForToken( packet.currencyTokenAddress, this.wolfpackInterface   )
-        
+        let tokenData = await APIHelper.getDataForToken( packet.currencyTokenAddress, this.wolfpackInterface   )
+        console.log('tokenData',tokenData)
         if(tokenData.synced){
 
-            let balanceApprovalData = APIHelper.getUserBalanceApprovalForToken( packet.bidderAddress, packet.currencyTokenAddress, BTFContractAddress, this.wolfpackInterface    )
-
+            let balanceApprovalData = await APIHelper.getUserBalanceApprovalForToken( packet.bidderAddress, packet.currencyTokenAddress, BTFContractAddress, this.wolfpackInterface    )
+            console.log('monitoring bid with synced data ',balanceApprovalData )
             
-            if(parseInt(packet.currencyTokenAmount) > parseInt(  balanceApprovalData.balance ) ){
+            if( balanceApprovalData.balance.isLessThan(parseInt(packet.currencyTokenAmount))  ){
                 console.log('suspending', packet.currencyTokenAmount, balanceApprovalData.balance)
                 isNowSuspended = true
             }
 
-            if(parseInt(packet.currencyTokenAmount) > parseInt( balanceApprovalData.approved ) ){
+            if( balanceApprovalData.approved.isLessThan(parseInt(packet.currencyTokenAmount))    ){
                 console.log('suspending', packet.currencyTokenAmount, balanceApprovalData.approved)
                 isNowSuspended = true
                  
+            }
+
+
+            if(!isNowSuspended){
+                console.log('found that bid is not suspended using wolfpack data.')
             }
 
 
