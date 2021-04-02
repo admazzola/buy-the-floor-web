@@ -13,12 +13,13 @@ IMPROVE LATER:
 
 
 ### TODO
- 
  -FOR VERSION 2
- Need to deploy the version 2 contract on mainnet 
+ Need to deploy the version 2 contract on mainnet  [DONE]
  need to setup alchemy 
  need to sync data from alchemy 
  
+
+ -set up proxy in nginx , port 3000 for api (api.buythefloor.com) using HTTPs certs 
 
 
 -run server with pm2 
@@ -30,9 +31,11 @@ IMPROVE LATER:
 
 4) make it easier to wrap things - wrapping on the site 
  
+ 5) make a page that simply shows a user all of the NFTS (api input is their address output is their NFTs!)
 
  -API 
   
+
 
 
 ### Development commands
