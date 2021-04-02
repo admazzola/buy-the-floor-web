@@ -15,8 +15,9 @@ import APIHelper from './api-helper.js'
 
 export default class PacketReceiver  {
 
-    constructor(web3, mongoInterface,serverConfig){
+    constructor(web3, mongoInterface,wolfpackInterface,serverConfig){
         this.mongoInterface = mongoInterface;
+        this.wolfpackInterface=wolfpackInterface;
         this.web3 = web3;
         this.serverConfig=serverConfig;
 
@@ -64,10 +65,9 @@ export default class PacketReceiver  {
 
     async startWebServer(app, apiPort){
 
-      app.get('/api/v1/:query', async (req, res) => {
-         
+      app.get('/api/v1/:query', async (req, res) => {         
           
-        let response = await APIHelper.handleApiRequest( req , this.mongoInterface )
+        let response = await APIHelper.handleApiRequest( req , this.mongoInterface, this.wolfpackInterface )
 
         res.send(response)
       })

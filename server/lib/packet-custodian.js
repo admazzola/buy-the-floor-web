@@ -15,6 +15,7 @@ import Web3Helper from './web3-helper.js'
 import BidPacketUtils from '../../src/js/bidpacket-utils.js'
 
 import FileHelper from './file-helper.js'
+import APIHelper from './api-helper.js'
 
 const GLOBAL_RATE_SCALE = 60
 
@@ -23,8 +24,9 @@ const ERC20ContractABI = FileHelper.readJSONFile('./src/contracts/ERC20ABI.json'
 
 export default class PacketCustodian  {
 
-    constructor(web3, mongoInterface, serverConfig){
+    constructor(web3, mongoInterface, wolfpackInterface, serverConfig){
         this.mongoInterface = mongoInterface;
+        this.wolfpackInterface = wolfpackInterface;
         this.web3 = web3;
         this.serverConfig = serverConfig
 
@@ -39,16 +41,23 @@ export default class PacketCustodian  {
         setInterval(this.updatePackets.bind(this),1000)
         setInterval(this.updateBidders.bind(this),1000)
 
-        setInterval(this.updateNetData.bind(this),90*1000)
+        this.updateNetData()
+        setInterval(this.updateNetData.bind(this),30*1000)
     }
 
     async updateNetData( ){
         this.blockNumber = await Web3Helper.getBlockNumber(this.web3);
+ 
+
+        await this.mongoInterface.upsertOne('network_data',{}, {lastUpdated: Date.now() , blockNumber: this.blockNumber, chainId: this.chainId  })
+        console.log('update net data ')
 
     }
     
     async updatePackets( ){
         console.log('updating packets')
+
+        //let overviewData = await APIHelper.getOverview(this.mongoInterface, this.wolfpackInterface)
 
 
         let timeNow = Date.now()
@@ -71,7 +80,7 @@ export default class PacketCustodian  {
         if(activePackets && activePackets.length > 0){
             let nextPacket = activePackets[0]
 
-            this.refreshPacket(nextPacket)
+            this.refreshPacket(nextPacket )
         }
 
 
@@ -106,7 +115,7 @@ export default class PacketCustodian  {
         
     }
 
-    async refreshPacket(   packet ){
+    async refreshPacket(   packet   ){
         let packetId = packet._id
 
         console.log('refresh packet', packetId)
@@ -155,8 +164,35 @@ export default class PacketCustodian  {
         //let bidCurrencyAmountRaw = packet.currencyTokenAmount
         //let buyerAddress = packet.bidderAddress 
 
-        await PacketCustodian.requestMonitorBidderBalance( packet.bidderAddress, packet.currencyTokenAddress  , this.mongoInterface)
 
+        let tokenData = APIHelper.getDataForToken( packet.currencyTokenAddress, this.wolfpackInterface   )
+        
+        if(tokenData.synced){
+
+            let balanceApprovalData = APIHelper.getUserBalanceApprovalForToken( packet.bidderAddress, packet.currencyTokenAddress, BTFContractAddress, this.wolfpackInterface    )
+
+            
+            if(parseInt(packet.currencyTokenAmount) > parseInt(  balanceApprovalData.balance ) ){
+                console.log('suspending', packet.currencyTokenAmount, balanceApprovalData.balance)
+                isNowSuspended = true
+            }
+
+            if(parseInt(packet.currencyTokenAmount) > parseInt( balanceApprovalData.approved ) ){
+                console.log('suspending', packet.currencyTokenAmount, balanceApprovalData.approved)
+                isNowSuspended = true
+                 
+            }
+
+
+
+        }else{
+
+            console.log('WARN: tokendata not synced - requesting manual monitoring ', packet.currencyTokenAddress )
+            await PacketCustodian.requestMonitorBidderBalance( packet.bidderAddress, packet.currencyTokenAddress  , this.mongoInterface)
+
+        }
+        
+        
       
 
         // ------
@@ -170,10 +206,17 @@ export default class PacketCustodian  {
 
         // ------
 
-
-        let updates = {
+        var updates = {
             $set: {  status:newStatus, lastRefreshed: Date.now()  } 
         }
+
+        if(isNowSuspended){
+            updates = {
+                $set: {  status:newStatus, lastRefreshed: Date.now(), suspended: isNowSuspended  } 
+            }
+        } 
+
+       
 
         await this.mongoInterface.updateCustomAndFindOne('bidpackets', { _id: packetId }, updates   )
 

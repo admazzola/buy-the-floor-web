@@ -2,6 +2,7 @@
 
 
 import MongoInterface from './lib/mongo-interface.js'
+import WolfpackInterface from './lib/wolfpack-interface.js'
 
 import PacketReceiver from './lib/packet-receiver.js'
 
@@ -24,15 +25,18 @@ let serverConfig = serverConfigFile[envmode]
     let mongoInterface = new MongoInterface( 'bidthefloor_'.concat(envmode) ) 
 
 
+    let wolfpackInterface = new WolfpackInterface( envmode )
+
+
     let web3 = new Web3( serverConfig.web3provider  )
 
-    let packetReceiver = new PacketReceiver(web3, mongoInterface,serverConfig)
+    let packetReceiver = new PacketReceiver(web3, mongoInterface, wolfpackInterface, serverConfig)
  
       
     
     console.log('web3 ready with provider ',serverConfig.web3provider )
 
-    let packetCustodian = new PacketCustodian(web3,mongoInterface, serverConfig)
+    let packetCustodian = new PacketCustodian(web3,mongoInterface, wolfpackInterface, serverConfig)
 
 
 
