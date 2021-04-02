@@ -16,7 +16,20 @@
         static async handleApiRequest(request, mongoInterface){
             console.log('got api request', request.params )
 
+            if(request.params['query'].toLowerCase() == 'overview' ){
+
+
+                return await APIHelper.getOverview(mongoInterface)
+            }
+
             return 'This is the API'
+        }
+
+        static async getOverview(mongoInterface){
+
+
+
+            return {success:true}
         }
     
          
