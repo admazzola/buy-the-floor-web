@@ -170,7 +170,7 @@ export default class PacketCustodian  {
         let tokenData = await APIHelper.getDataForToken( packet.currencyTokenAddress, this.wolfpackInterface   )
         const ONE_HOUR = 60*60*1000;
 
-        if(tokenData.synced && parseInt(tokenData.lastUpdated) >  (Date.now() - ONE_HOUR)){
+        if(tokenData && tokenData.synced && parseInt(tokenData.lastUpdated) >  (Date.now() - ONE_HOUR)){
 
             let balanceApprovalData = await APIHelper.getUserBalanceApprovalForToken( packet.bidderAddress, packet.currencyTokenAddress, BTFContractAddress, this.wolfpackInterface    )
             console.log('monitoring bid with synced data ',balanceApprovalData )
@@ -196,7 +196,7 @@ export default class PacketCustodian  {
         }else{
 
             console.log('WARN: tokendata not synced - requesting manual monitoring ', packet.currencyTokenAddress )
-            await PacketCustodian.requestMonitorBidderBalance( packet.bidderAddress, packet.currencyTokenAddress  , this.mongoInterface)
+            await PacketCustodian.requestMonitorBidderBalance( packet.bidderAddress, packet.currencyTokenAddress  , packet.chainId,  this.mongoInterface)
 
         }
         
@@ -232,7 +232,7 @@ export default class PacketCustodian  {
 
 
     async refreshAccount( bidderData ){
-
+        console.log(bidderData)
         let balanceApprovalData = await this.getBalanceAndApprovalDataForAccount(bidderData.publicAddress, bidderData.currencyTokenAddress)
 
 
@@ -269,13 +269,19 @@ export default class PacketCustodian  {
 
 
 
-    static async requestMonitorBidderBalance(publicAddress, currencyTokenAddress,mongoInterface){
-        await mongoInterface.upsertOne('monitored_accounts', {publicAddress:publicAddress,currencyTokenAddress:currencyTokenAddress }, { publicAddress:publicAddress,currencyTokenAddress:currencyTokenAddress,lastRequested: Date.now() } )
-    }
+    static async requestMonitorBidderBalance(publicAddress, currencyTokenAddress, chainId, mongoInterface){
+        if(chainId && parseInt(chainId) == parseInt(this.chainId)){
+            await mongoInterface.upsertOne('monitored_accounts', {publicAddress:publicAddress,currencyTokenAddress:currencyTokenAddress }, { publicAddress:publicAddress,currencyTokenAddress:currencyTokenAddress,lastRequested: Date.now() } )
+
+        }else{
+            console.log('tried to request monitor balance for wrong chainId', chainId)
+        }
+
+     }
 
 
       async getBalanceAndApprovalDataForAccount( publicAddress, currencyTokenAddress, mongoInterface){
-
+        //console.log('getBalanceAndApprovalDataForAccount',currencyTokenAddress)
         let chainId = this.chainId 
         let web3 = this.web3
 

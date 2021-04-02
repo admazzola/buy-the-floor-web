@@ -207,9 +207,15 @@ this.web3Plug.getPlugEventEmitter().on('stateChanged', function(connectionState)
             this.contractData = contractData[this.nftTypeName]
             this.typeData = BuyTheFloorHelper.getNFTTypeDataFromName( this.nftTypeName , chainId ) // nftTypes[this.nftTypeName]
 
-            this.filterByNFTContractAddress = this.contractData.address
+              if( this.contractData){
+                this.filterByNFTContractAddress = this.contractData.address
 
-             this.fetchBidsData()
+                 this.fetchBidsData()
+              }else{
+                consol.log('warn: could not fetch bids ')
+              }
+
+            
           }
 
     },

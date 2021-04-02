@@ -44,16 +44,23 @@
           <div  class=" "  >
 
 
-             
 
-            <div v-if="!selectedNFTContractAddress">
+
+           <div v-if="!connectedToWeb3">
+
+                No web3 connection
+
+            </div>
+
+
+            <div v-if="connectedToWeb3 && !selectedNFTContractAddress">
 
                 Something went wrong..  
 
             </div>
 
 
-          <div v-if="selectedNFTContractAddress">
+          <div v-if="connectedToWeb3 && selectedNFTContractAddress">
 
 
 
@@ -64,7 +71,7 @@
 
                   
 
-                  <div class="text-md  "> Selected Type: <a v-bind:href="'/type/'.concat(typeData.name)" > {{selectedNFTType}} </a> </div>
+                  <div class="text-md  " v-if="typeData"> Selected Type: <a v-bind:href="'/type/'.concat(typeData.name)" > {{selectedNFTType}} </a> </div>
                   
 
 
@@ -151,15 +158,15 @@ export default {
 
 
 
-    
+   
 
 
    
     this.web3Plug.getPlugEventEmitter().on('stateChanged', function(connectionState) {
         console.log('stateChanged',connectionState);
          
-        this.activeAccountAddress = connectionState.activeAccountAddress
-        this.activeNetworkId = connectionState.activeNetworkId
+        this.activeAccountAddress = this.web3Plug.getActiveAccountAddress()//connectionState.activeAccountAddress
+        this.activeNetworkId = this.web3Plug.getActiveNetId()//connectionState.activeNetworkId
          
         this.connectedToWeb3 = this.web3Plug.connectedToWeb3()
         this.nftTypes = BuyTheFloorHelper.getClientConfigForNetworkId(this.web3Plug.getActiveNetId()).nftTypes
@@ -167,15 +174,8 @@ export default {
 
         let chainId = this.activeNetworkId
         if(!chainId) chainId = 1
-        let contractData = this.web3Plug.getContractDataForNetworkID(chainId)
-
-        this.selectedNFTType = this.$route.params.nft_type.toLowerCase()
-        if(contractData[this.selectedNFTType]){
-            this.selectedNFTContractAddress =  contractData[this.selectedNFTType].address 
-            this.selectedNFTProjectId =  contractData[this.selectedNFTType].projectId 
-        }
-       
-
+        
+         this.loadTypeData(chainId)
 
 
       }.bind(this));
@@ -186,8 +186,8 @@ export default {
         
       }.bind(this));
 
-
-    //await this.web3Plug.reconnectWeb()
+     this.web3Plug.reconnectWeb()
+   // await this.web3Plug.reconnectWeb()
 
 
     let chainId = this.web3Plug.getActiveNetId()
@@ -195,28 +195,37 @@ export default {
       chainId = 1
     }
 
-    this.nftTypes = BuyTheFloorHelper.getClientConfigForNetworkId(chainId).nftTypes
-    let contractData = this.web3Plug.getContractDataForNetworkID(chainId)
-
-      this.selectedNFTType = this.$route.params.nft_type.toLowerCase()
-      if(contractData[this.selectedNFTType]){
-        this.selectedNFTContractAddress =  contractData[this.selectedNFTType].address
-        this.selectedNFTProjectId =  contractData[this.selectedNFTType].projectId 
-
-        this.typeData = BuyTheFloorHelper.getNFTTypeDataFromName( this.selectedNFTType , chainId ) 
-
-      }
+     this.loadTypeData(chainId)
       
 
   }, 
   async mounted(){
-     await this.web3Plug.reconnectWeb()
+     
 
   },
   beforeDestroy(){
     this.web3Plug.clearEventEmitter()
   },
   methods: {
+
+
+        loadTypeData(chainId){
+           this.nftTypes = BuyTheFloorHelper.getClientConfigForNetworkId(chainId).nftTypes
+          let contractData = this.web3Plug.getContractDataForNetworkID(chainId)
+
+          if(!this.$route.params.nft_type) return
+
+            this.selectedNFTType = this.$route.params.nft_type.toLowerCase()
+            if(contractData[this.selectedNFTType]){
+              this.selectedNFTContractAddress =  contractData[this.selectedNFTType].address
+              this.selectedNFTProjectId =  contractData[this.selectedNFTType].projectId 
+
+              this.typeData = BuyTheFloorHelper.getNFTTypeDataFromName( this.selectedNFTType , chainId ) 
+
+            }
+
+
+        },
         /*onTileClicked(name){
           console.log('ontileclicked',name )
 

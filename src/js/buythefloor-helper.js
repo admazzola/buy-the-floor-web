@@ -46,10 +46,13 @@ export default class BuyTheFloorHelper {
 
     console.log('get name', contractDataLookup[networkName] , address, projectId)
 
-    let contractData = contractDataLookup[networkName][address.toLowerCase()][projectId]
-    if(contractData){
-      return contractData.name 
+    if(contractDataLookup[networkName][address.toLowerCase()]){
+      let contractData = contractDataLookup[networkName][address.toLowerCase()][projectId]
+      if(contractData){
+        return contractData.name 
+      }
     }
+    
      //this.contractNameLookupTable[address]
  
     return '?'
@@ -66,7 +69,7 @@ export default class BuyTheFloorHelper {
     if(isNaN(projectId))projectId=0;
 
     console.log('get decimals', contractDataLookup[networkName] , address)
-    if(contractDataLookup[networkName][address.toLowerCase()][projectId]){
+    if(contractDataLookup[networkName][address.toLowerCase()] && contractDataLookup[networkName][address.toLowerCase()][projectId]){
       return contractDataLookup[networkName][address.toLowerCase()][projectId].decimals  //this.contractNameLookupTable[address]
  
     }

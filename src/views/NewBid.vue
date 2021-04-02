@@ -108,7 +108,9 @@
 
             <div> CurrencyAddress: <a  target="_blank" v-bind:href="web3Plug.getExplorerLinkForAddress(formInputs.tokenContractAddress)"> {{formInputs.tokenContractAddress}} </a> </div>
 
-            <div> bidAmountRaw: {{getTokenBidAmountRaw()}}</div>
+            <div> bidAmount: {{getTokenBidAmountFormatted()}}</div>
+
+            <div class="hidden"> bidAmountRaw: {{getTokenBidAmountRaw()}}</div>
 
             <div> Decimals: {{this.formInputs.tokenDecimals}}</div>
 
@@ -466,6 +468,11 @@ export default {
         getTokenBidAmountRaw(){
           return this.web3Plug.formattedAmountToRaw( this.formInputs.tokenBidAmountFormatted, this.formInputs.tokenDecimals ) 
         },
+
+         getTokenBidAmountFormatted(){
+          return this.web3Plug.rawAmountToFormatted( this.getTokenBidAmountRaw(), this.formInputs.tokenDecimals ) 
+        },
+
         getExpiresAtBlock(){
           return ( parseInt(this.currentBlockNumber) + parseInt(this.formInputs.expiresInBlocks))
         },

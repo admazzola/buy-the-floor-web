@@ -5,7 +5,7 @@
  
       "weth":{"name":"wEth","address":"0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", "decimals":18, "minBidAmount":0.02},
      
-      "buythefloor":{"address":""},
+      "buythefloor":{"address":"0x392d7bda765d8bbe626abeb2127e6d6395eff44c"},
 
      
       "hashmasks":{"name":"Hashmasks","address":"0xc2c747e0f7004f9e8817db2ca4997657a7746928"},

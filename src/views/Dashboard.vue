@@ -22,12 +22,12 @@
               <NotConnectedToWeb3 />
           </div>
 
-       <div class="w-column">
+       <div class="w-column"  v-if=" connectedToWeb3">
           <div class="text-lg font-bold"> Your Active Bids  </div>
           
          
 
-          <div  class=" " v-if=" connectedToWeb3">
+          <div  class=" "  >
 
              
             
@@ -49,11 +49,11 @@
           
        </div>
 
-          <div class="w-column mt-24">
+          <div class="w-column mt-24"  v-if=" connectedToWeb3" >
           <div class="text-lg font-bold"> Your Inactive Bids  </div>
            
 
-          <div  class=" " v-if=" connectedToWeb3">
+          <div  class=" "  >
  
 
             <div v-if="selectedTab=='bids'" class="mb-4 ">
@@ -183,6 +183,8 @@ export default {
             console.log('serverURL',serverURL)
 
             let contractData = this.web3Plug.getContractDataForActiveNetwork()
+
+            if(!contractData)return; 
             let btfContractAddress = contractData['buythefloor'].address
 
 

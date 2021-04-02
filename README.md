@@ -8,6 +8,10 @@ IMPROVE LATER:
 - build subgraphs for wrapped mooncats and wrapped punks that give orig ids and wrap ids  !!! Per owner .
 
 
+- Use wolfpack to store event data about BTF burn events 
+- Use Starflask API to show sellers a page of all of their NFTs (so they dont have to pick by type )
+
+
 ### TODO
  
  -FOR VERSION 2

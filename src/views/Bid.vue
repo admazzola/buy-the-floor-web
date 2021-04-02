@@ -48,9 +48,31 @@
           <div> status:  {{bidPacketData.status}}</div>
           <div> suspended:  {{bidPacketData.suspended}}</div>
 
+
+         <div v-cloak class="my-8 bg-red-200 p-2 md:flex md:flex-row" v-if="suspensionAlertVisible()">
+           
+           <div class=" flex-grow ">
+
+            <div class="font-bold text-lg"> This bid is suspended and inactive. </div>
+
+            <div v-if="!hasSufficientBalance()"> > There is not enough {{bidPacketData.currencyTokenName}} in your account. </div>
+            <div v-if="!bidCurrencyIsApproved()"> > There is not enough {{bidPacketData.currencyTokenName}} approved to the BuyTheFloor smart contract. </div>
+          </div>
+          <div class="  ">
+
+               <div class="w-1/2 px-4" @click="approveCurrencyToken" v-if="!bidCurrencyIsApproved()">
+                     <div class="select-none bg-teal-300 p-2 inline-block rounded border-black border-2 cursor-pointer"> Approve </div>
+                </div>
+
+             
+          </div>
+
+
+         </div>
+
            <div class="my-8">
 
-        <div @click="cancelBid()" v-if="userIsOwnerOfBid()" class="select-none bg-teal-300 p-2 inline-block rounded border-black border-2 cursor-pointer"> Cancel bid </div>
+        <div v-cloak @click="cancelBid()" v-if="userIsOwnerOfBid()" class="select-none bg-teal-300 p-2 inline-block rounded border-black border-2 cursor-pointer"> Cancel bid </div>
            <a v-bind:href='"/sell/".concat(bidPacketData.nftContractName)' class="mx-2 select-none bg-teal-300 p-2 no-underline inline-block rounded border-black border-2 cursor-pointer text-black text-md"> Fulfill this bid </a>
          
         </div>
@@ -125,7 +147,9 @@ export default {
 
       tokenBalances:{},
       tokensApproved:{},
-      currentBlockNumber: null
+      currentBlockNumber: null,
+
+      ApproveAllAmount: "1000000000000000000000000000000",
     }
   },
   created: function () {
@@ -244,7 +268,23 @@ export default {
      } ,
 
      userIsOwnerOfBid(){
-       return (this.bidPacketData.bidderAddress && this.bidPacketData.bidderAddress.toLowerCase() == this.web3Plug.getActiveAccountAddress())
+       return (this.bidPacketData && this.bidPacketData.bidderAddress && this.bidPacketData.bidderAddress.toLowerCase() == this.web3Plug.getActiveAccountAddress())
+     },
+
+
+    hasSufficientBalance() {
+ 
+      return (this.tokenBalances[this.bidPacketData.currencyTokenAddress] >= parseInt(this.bidPacketData.currencyTokenAmount))
+    },
+
+     bidCurrencyIsApproved() {
+ 
+      return (this.tokensApproved[this.bidPacketData.currencyTokenAddress] >= parseInt(this.bidPacketData.currencyTokenAmount))
+    },
+
+     suspensionAlertVisible() {
+ 
+            return (this.currentBlockNumber && (!this.bidCurrencyIsApproved() || !this.hasSufficientBalance() )&& this.userIsOwnerOfBid() && this.web3Plug.connectedToWeb3())
      },
 
 
@@ -273,7 +313,21 @@ export default {
           this.$forceUpdate()
          }, 
 
+      async approveCurrencyToken(){
 
+           let contractData = this.web3Plug.getContractDataForActiveNetwork()
+
+              let activeAddress = this.web3Plug.getActiveAccountAddress()
+                let currencyAddress = this.bidPacketData.currencyTokenAddress
+
+              let btfContractAddress = contractData['buythefloor'].address
+              let currencyTokenContract = this.web3Plug.getTokenContract(currencyAddress)
+             
+             console.log('new approve' , btfContractAddress, this.ApproveAllAmount)
+              await currencyTokenContract.methods.approve(btfContractAddress, this.ApproveAllAmount ).send({from:activeAddress})
+
+
+      },
 
 
      getBidShareLink(type){

@@ -122,7 +122,7 @@ export default {
       }.bind(this));
 
 
-    await this.web3Plug.reconnectWeb()
+      this.web3Plug.reconnectWeb()
 
 
     let chainId = this.web3Plug.getActiveNetId()
