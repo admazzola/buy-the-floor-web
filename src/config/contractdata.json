@@ -29,6 +29,9 @@
       "eulerbeats":{"name":"Eulerbeats","address":"0x8754f54074400ce745a7ceddc928fb1b7e985ed6"},
 
       "cryptovoxelsparcels":{"name":"CryptovoxelsParcels","address":"0x79986af15539de2db9a5086382daeda917a9cf0c"},
+      "framergence":{"name":"Framergence","address":"0xbc17cd7f1a58bda5d6181618090813b3050416b5"},
+
+      
 
       "chromiesquiggles":{"name":"ChromieSquiggles","address":"0x059edd72cd353df5106d2b9cc5ab83a52287ac3a", "projectId": 0},
       "ignition":{"name":"Ignition","address":"0x059edd72cd353df5106d2b9cc5ab83a52287ac3a", "projectId": 9},

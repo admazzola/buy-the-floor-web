@@ -168,8 +168,9 @@ export default class PacketCustodian  {
 
 
         let tokenData = await APIHelper.getDataForToken( packet.currencyTokenAddress, this.wolfpackInterface   )
-        console.log('tokenData',tokenData)
-        if(tokenData.synced){
+        const ONE_HOUR = 60*60*1000;
+        
+        if(tokenData.synced && parseInt(tokenData.lastUpdated) >  (Date.now() - ONE_HOUR)){
 
             let balanceApprovalData = await APIHelper.getUserBalanceApprovalForToken( packet.bidderAddress, packet.currencyTokenAddress, BTFContractAddress, this.wolfpackInterface    )
             console.log('monitoring bid with synced data ',balanceApprovalData )

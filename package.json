@@ -42,7 +42,7 @@
     "vue-router": "^3.0.1",
     "vue-tailwind": "^1.2.6",
     "web3": "^1.2.11",
-    "wolfpack": "admazzola/wolfpack"
+    "wolfpack": "github:admazzola/wolfpack"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.5",
