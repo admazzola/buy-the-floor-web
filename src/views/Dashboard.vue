@@ -18,12 +18,14 @@
    <div class="section  bg-white border-b-2 border-black">
      <div class="autospacing w-container">
         
-       <div class="w-column">
-          <div class="text-lg font-bold"> Your Bids  </div>
-          
-          <div  class=" " v-if="!connectedToWeb3">
+         <div  class=" " v-if="!connectedToWeb3">
               <NotConnectedToWeb3 />
           </div>
+
+       <div class="w-column">
+          <div class="text-lg font-bold"> Your Active Bids  </div>
+          
+         
 
           <div  class=" " v-if=" connectedToWeb3">
 
@@ -34,7 +36,7 @@
 
               <GenericTable
                 v-bind:labelsArray="['nftType','currencyType','bidAmount','expires']"
-                v-bind:rowsArray="bidRowsArray"
+                v-bind:rowsArray="activeBidRowsArray"
                 v-bind:clickedRowCallback="clickedBidRowCallback"
                />
 
@@ -46,6 +48,32 @@
 
           
        </div>
+
+          <div class="w-column mt-24">
+          <div class="text-lg font-bold"> Your Inactive Bids  </div>
+           
+
+          <div  class=" " v-if=" connectedToWeb3">
+ 
+
+            <div v-if="selectedTab=='bids'" class="mb-4 ">
+
+              <GenericTable
+                v-bind:labelsArray="['nftType','currencyType','bidAmount','expires']"
+                v-bind:rowsArray="inactiveBidRowsArray"
+                v-bind:clickedRowCallback="clickedBidRowCallback"
+               />
+
+           </div>
+
+
+          </div>
+
+
+          
+       </div>
+
+
      </div>
    </div>
 
@@ -89,7 +117,8 @@ export default {
       web3Plug: new Web3Plug() ,
       activePanelId: null,
       selectedTab:"bids",
-      bidRowsArray:[],
+      activeBidRowsArray:[],
+      inactiveBidRowsArray:[],
 
        
       connectedToWeb3: false,
@@ -162,24 +191,44 @@ export default {
             let bidPackets = await BidPacketHelper.getBidPackets(serverURL,query)
             console.log('bidPackets',bidPackets)
 
-             bidPackets = bidPackets.filter( (bid) => {
+            /* bidPackets = bidPackets.filter( (bid) => {
               return (bid.status == 'active')
-            } )
+            } )*/
 
             let chainId = this.web3Plug.getActiveNetId()
+
+
+            for(let packet of bidPackets){
+
+              if(packet.status == 'active' && packet.suspended == false){
+                  this.activeBidRowsArray.push(this.getBidRowFromPacket(packet,chainId))
+              }else{
+                 this.inactiveBidRowsArray.push(this.getBidRowFromPacket(packet,chainId))
+              }
+
+            }
             
 
-            this.bidRowsArray = bidPackets.map(pkt => (
-                                                           {
-                                                            nftContractAddress: BuyTheFloorHelper.getNameFromContractAddress(pkt.nftContractAddress,pkt.projectId,chainId),
-                                                            currencyTokenAddress: BuyTheFloorHelper.getNameFromContractAddress(pkt.currencyTokenAddress,0,chainId),
-                                                            currencyTokenAmount: BuyTheFloorHelper.getFormattedCurrencyAmount(pkt.currencyTokenAmount,pkt.currencyTokenAddress, chainId) ,
-                                                            expires: pkt.expires,
-                                                            signature: pkt.signature.signature
-                                                          } 
-                                                        ))
+            
           },
 
+          getBidRowFromPacket(pkt,chainId){ 
+            
+            return{
+                  nftContractAddress: BuyTheFloorHelper.getNameFromContractAddress(pkt.nftContractAddress,pkt.projectId,chainId),
+                  currencyTokenAddress: BuyTheFloorHelper.getNameFromContractAddress(pkt.currencyTokenAddress,0,chainId),
+                  currencyTokenAmount: BuyTheFloorHelper.getFormattedCurrencyAmount(pkt.currencyTokenAmount,pkt.currencyTokenAddress, chainId) ,
+                  expires: pkt.expires,
+                  signature: pkt.signature.signature,
+                  suspended: pkt.suspended,
+                  status: pkt.status
+                } 
+                                                      
+
+          },
+
+
+           
           
           clickedBidRowCallback(row){
             console.log('clicked bid row',row )

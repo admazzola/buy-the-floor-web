@@ -121,7 +121,11 @@ export default {
   data() {
     return {
       web3Plug: new Web3Plug() ,
-      bidPacketData: {} 
+      bidPacketData: {} ,
+
+      tokenBalances:{},
+      tokensApproved:{},
+      currentBlockNumber: null
     }
   },
   created: function () {
@@ -133,7 +137,9 @@ export default {
         this.activeNetworkId = connectionState.activeNetworkId
 
          this.fetchPacketData(this.$route.params.signature)
-         
+
+       
+
       }.bind(this));
    this.web3Plug.getPlugEventEmitter().on('error', function(errormessage) {
         console.error('error',errormessage);
@@ -145,6 +151,16 @@ export default {
       this.web3Plug.reconnectWeb()
 
       this.fetchPacketData(this.$route.params.signature)
+
+
+      setInterval( function(){
+
+          if(this.web3Plug.connectedToWeb3() && this.userIsOwnerOfBid()){
+           this.updateBalances()
+         } 
+
+      }.bind(this),8000)
+
   }, 
    beforeDestroy(){
     this.web3Plug.clearEventEmitter()
@@ -211,6 +227,12 @@ export default {
  
 
          console.log('fetched',this.bidPacketData)
+
+           if(this.web3Plug.connectedToWeb3() && this.userIsOwnerOfBid()){
+           this.updateBalances()
+         } 
+
+
      },
 
      async cancelBid(){
@@ -224,6 +246,35 @@ export default {
      userIsOwnerOfBid(){
        return (this.bidPacketData.bidderAddress && this.bidPacketData.bidderAddress.toLowerCase() == this.web3Plug.getActiveAccountAddress())
      },
+
+
+      async updateBalances(){
+
+        console.log('update balances')
+          
+          let contractData = this.web3Plug.getContractDataForActiveNetwork()
+
+          let activeAddress = this.web3Plug.getActiveAccountAddress()
+          let currencyAddress = this.bidPacketData.currencyTokenAddress
+
+          
+
+          let btfContractAddress = contractData['buythefloor'].address
+
+          console.log('currencyAddress',currencyAddress)
+          
+          this.tokenBalances[currencyAddress] = await this.web3Plug.getTokenBalance(currencyAddress,activeAddress)
+          this.tokensApproved[currencyAddress] = await this.web3Plug.getTokenAllowance(currencyAddress,btfContractAddress,activeAddress)
+
+          this.currentBlockNumber = await this.web3Plug.getBlockNumber()
+        
+
+          console.log('approve', this.tokensApproved)
+          this.$forceUpdate()
+         }, 
+
+
+
 
      getBidShareLink(type){
 

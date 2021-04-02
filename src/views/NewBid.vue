@@ -68,7 +68,7 @@
 
               <div class="flex flex-row">
               <div class="w-1/2 px-4">
-                    <input type="number" v-on:blur="restrictBidAmount()"  v-model="formInputs.tokenBidAmountFormatted"  class="text-gray-900 border-2 border-black font-bold px-4 text-xl focus:ring-indigo-500 focus:border-indigo-500 block w-full py-4 pl-7 pr-12   border-gray-300 rounded-md" placeholder="0.00">
+                    <input type="number"   v-model="formInputs.tokenBidAmountFormatted"  class="text-gray-900 border-2 border-black font-bold px-4 text-xl focus:ring-indigo-500 focus:border-indigo-500 block w-full py-4 pl-7 pr-12   border-gray-300 rounded-md" placeholder="0.00">
                 </div>
 
                   <div class="w-1/2 px-4" @click="approveCurrencyToken" v-if=" approveButtonVisible()">
@@ -98,7 +98,7 @@
 
 
           <hr>
-          <div class="py-4" v-if="selectedCurrencyIsApproved() && !bidSubmitComplete">
+          <div class="py-4" v-if=" connectedToWeb3 && !bidSubmitComplete">
              
  
 
@@ -459,7 +459,7 @@ export default {
           
           this.updateBalances();
 
-          this.restrictBidAmount()
+          //this.restrictBidAmount()
 
            
         },
@@ -485,11 +485,11 @@ export default {
             this.formInputs.expiresInBlocks = this.maxExpiresInBlocks
           }
         },
-        restrictBidAmount(){
+       /* restrictBidAmount(){
           if(parseFloat(this.formInputs.tokenBidAmountFormatted) > this.getSelectedCurrencyBalanceFormatted() ){
             this.formInputs.tokenBidAmountFormatted = this.getSelectedCurrencyBalanceFormatted()
           }
-        },
+        },*/
         getDaysFromBlocks(blocks){
           return parseFloat(blocks / 5760).toFixed(2)
         }

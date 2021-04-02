@@ -126,7 +126,7 @@ export default class PacketCustodian  {
 
         let web3 = this.web3 
 
-         var isNowSuspended = false
+        var isNowSuspended = false
 
         let chainId = this.chainId 
         let blockNumber = this.blockNumber
@@ -169,18 +169,18 @@ export default class PacketCustodian  {
 
         let tokenData = await APIHelper.getDataForToken( packet.currencyTokenAddress, this.wolfpackInterface   )
         const ONE_HOUR = 60*60*1000;
-        
+
         if(tokenData.synced && parseInt(tokenData.lastUpdated) >  (Date.now() - ONE_HOUR)){
 
             let balanceApprovalData = await APIHelper.getUserBalanceApprovalForToken( packet.bidderAddress, packet.currencyTokenAddress, BTFContractAddress, this.wolfpackInterface    )
             console.log('monitoring bid with synced data ',balanceApprovalData )
             
-            if( balanceApprovalData.balance.isLessThan(parseInt(packet.currencyTokenAmount))  ){
+            if( new BigNumber(balanceApprovalData.balance).isLessThan(parseInt(packet.currencyTokenAmount))  ){
                 console.log('suspending', packet.currencyTokenAmount, balanceApprovalData.balance)
                 isNowSuspended = true
             }
 
-            if( balanceApprovalData.approved.isLessThan(parseInt(packet.currencyTokenAmount))    ){
+            if(  new BigNumber(balanceApprovalData.approved).isLessThan(parseInt(packet.currencyTokenAmount))    ){
                 console.log('suspending', packet.currencyTokenAmount, balanceApprovalData.approved)
                 isNowSuspended = true
                  
