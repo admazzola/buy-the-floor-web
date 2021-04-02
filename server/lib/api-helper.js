@@ -32,6 +32,12 @@
 
                     return await APIHelper.getOverview(mongoInterface,wolfpackInterface)
                 }
+
+                if(request.params['query'].toLowerCase() == 'recentsales' ){ 
+
+                    return await APIHelper.getRecentSales( wolfpackInterface)
+                }
+
             }
 
             if(type == 'userbids'){
@@ -66,13 +72,26 @@
             return response
         }
 
+
+
+        static async getRecentSales( wolfpackInterface){
+
+
+            let salesArray = await wolfpackInterface.getMongo().findAllSortedWithLimit('nft_sale',{  }, {}, 100 )
+
+            return {recentSales: salesArray}
+
+             
+        }
+
+
         static async getActiveBidsOfUser(userAddress, mongoInterface){
 
             userAddress = userAddress.toLowerCase()
 
-            let bidsArray = await mongoInterface.findAllSortedWithLimit('bidpackets',{bidderAddress: userAddress }, {}, 100 )
+            let bidsArray = await mongoInterface.findAllSortedWithLimit('bidpackets',{bidderAddress: userAddress }, {}, 500 )
 
-            return {activeBids: bidsArray}
+            return {bids: bidsArray}
         }
         
         static async getDataForToken(tokenAddress, wolfpackInterface ){
@@ -106,6 +125,24 @@
 
             return results
         }
+
+
+        static async getSignatureIsBurned(packetHash, wolfpackInterface ){
+
+            //tokenAddress = web3utils.toChecksumAddress(tokenAddress)
+
+            let signatureData = await wolfpackInterface.getMongo().findOne('offchain_signatures',{hash: packetHash })
+
+            if(signatureData){
+                console.log('found burn status', signatureData)
+
+                return signatureData.burned 
+            }
+
+            return false 
+       }
+            
+
     
          
     }

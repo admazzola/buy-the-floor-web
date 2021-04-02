@@ -160,6 +160,9 @@ export default {
    
    
   }, 
+   beforeDestroy(){
+    this.web3Plug.clearEventEmitter()
+  },
   methods: {
           setActivePanel(panelId){
               if(panelId == this.activePanelId){
@@ -200,6 +203,8 @@ export default {
             let chainId = this.web3Plug.getActiveNetId()
 
 
+          this.activeBidRowsArray=[]
+          this.inactiveBidRowsArray=[]
             for(let packet of bidPackets){
 
               if(packet.status == 'active' && packet.suspended == false){

@@ -72,8 +72,8 @@
 
            <div class="my-8">
 
-        <div v-cloak @click="cancelBid()" v-if="userIsOwnerOfBid()" class="select-none bg-teal-300 p-2 inline-block rounded border-black border-2 cursor-pointer"> Cancel bid </div>
-           <a v-bind:href='"/sell/".concat(bidPacketData.nftContractName)' class="mx-2 select-none bg-teal-300 p-2 no-underline inline-block rounded border-black border-2 cursor-pointer text-black text-md"> Fulfill this bid </a>
+        <div v-cloak @click="cancelBid()" v-if="userIsOwnerOfBid() && !bidHasBeenBurned()" class="select-none bg-teal-300 p-2 inline-block rounded border-black border-2 cursor-pointer"> Cancel bid </div>
+           <a v-cloak v-if="!bidHasBeenBurned()"  v-bind:href='"/sell/".concat(bidPacketData.nftContractName)' class="mx-2 select-none bg-teal-300 p-2 no-underline inline-block rounded border-black border-2 cursor-pointer text-black text-md"> Fulfill this bid </a>
          
         </div>
 
@@ -178,6 +178,9 @@ export default {
 
 
       setInterval( function(){
+
+        this.fetchPacketData(this.$route.params.signature)
+
 
           if(this.web3Plug.connectedToWeb3() && this.userIsOwnerOfBid()){
            this.updateBalances()
@@ -285,6 +288,10 @@ export default {
      suspensionAlertVisible() {
  
             return (this.currentBlockNumber && (!this.bidCurrencyIsApproved() || !this.hasSufficientBalance() )&& this.userIsOwnerOfBid() && this.web3Plug.connectedToWeb3())
+     },
+
+     bidHasBeenBurned(){
+       return this.bidPacketData.status == 'burned'
      },
 
 

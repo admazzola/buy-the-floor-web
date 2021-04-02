@@ -72,7 +72,7 @@ export default class PacketCustodian  {
 
         let allActivePackets =   await this.mongoInterface.findAll('bidpackets', {status:'active', exchangeContractAddress:BTFContractAddress})
 
-        let RefreshWaitTime = (1 + allActivePackets.length)*1000*GLOBAL_RATE_SCALE;  
+        let RefreshWaitTime = (1 + allActivePackets.length)*1000//*GLOBAL_RATE_SCALE;  
 
         console.log('RefreshWaitTime - bidpackets',RefreshWaitTime)
 
@@ -99,7 +99,12 @@ export default class PacketCustodian  {
 
         let allActiveBidders =   await this.mongoInterface.findAll('monitored_accounts', {lastRequested: {$gt:timeNow-ONE_DAY }    })
 
+        
+        
+
         let RefreshWaitTime = (1 + allActiveBidders.length)*1000*GLOBAL_RATE_SCALE;  
+
+        
 
         console.log('RefreshWaitTime - bidders',RefreshWaitTime)
 
@@ -152,11 +157,14 @@ export default class PacketCustodian  {
 
         let BTFContract = Web3Helper.getCustomContract( BTFContractABI, BTFContractAddress , web3 )
 
-        let signatureStatus = await BTFContract.methods.burnedSignatures( packetHash ).call()
+        //let signatureStatus = await BTFContract.methods.burnedSignatures( packetHash ).call()
+
+        let signatureIsBurned = await APIHelper.getSignatureIsBurned( packetHash, this.wolfpackInterface )
 
         //console.log('signatureStatus', signatureStatus)
 
-        if(  signatureStatus != 0  ){
+        if( signatureIsBurned  ){
+
             newStatus = 'burned'
         }
         // ------
@@ -196,7 +204,7 @@ export default class PacketCustodian  {
         }else{
 
             console.log('WARN: tokendata not synced - requesting manual monitoring ', packet.currencyTokenAddress )
-            await PacketCustodian.requestMonitorBidderBalance( packet.bidderAddress, packet.currencyTokenAddress  , packet.chainId,  this.mongoInterface)
+            await PacketCustodian.requestMonitorBidderBalance( packet.bidderAddress, packet.currencyTokenAddress  , packet.chainId, this.serverConfig,  this.mongoInterface)
 
         }
         
@@ -233,33 +241,47 @@ export default class PacketCustodian  {
 
     async refreshAccount( bidderData ){
         console.log(bidderData)
-        let balanceApprovalData = await this.getBalanceAndApprovalDataForAccount(bidderData.publicAddress, bidderData.currencyTokenAddress)
-
-
-        let activePackets = await this.mongoInterface.findAll('bidpackets', {bidderAddress: bidderData.publicAddress, currencyTokenAddress: bidderData.currencyTokenAddress, status:'active'    } )
+        
+        let balanceApprovalData = this.getBalanceAndApprovalDataForAccount(bidderData.publicAddress, bidderData.currencyTokenAddress, bidderData.currencyTokenChainId).then(async (value) => {
+          
+        
+        
+            let activePackets = await this.mongoInterface.findAll('bidpackets', {bidderAddress: bidderData.publicAddress, currencyTokenAddress: bidderData.currencyTokenAddress, status:'active'    } )
         
  
-        for(let packet of activePackets){
-
-            let isNowSuspended = false 
-
-            if(parseInt(packet.currencyTokenAmount) > parseInt(balanceApprovalData.balance) ){
-                console.log('suspending', packet.currencyTokenAmount, balanceApprovalData.balance)
-                isNowSuspended = true
+            for(let packet of activePackets){
+    
+                let isNowSuspended = false 
+    
+                if(parseInt(packet.currencyTokenAmount) > parseInt(balanceApprovalData.balance) ){
+                    console.log('suspending', packet.currencyTokenAmount, balanceApprovalData.balance)
+                    isNowSuspended = true
+                }
+    
+                if(parseInt(packet.currencyTokenAmount) > parseInt(balanceApprovalData.approved) ){
+                    console.log('suspending', packet.currencyTokenAmount, balanceApprovalData.balance)
+                    isNowSuspended = true
+                }
+    
+                let updates = {
+                    $set: {  suspended: isNowSuspended  } 
+                }
+    
+                await this.mongoInterface.updateCustomAndFindOne('bidpackets', { _id: packet._id }, updates   )
+    
             }
 
-            if(parseInt(packet.currencyTokenAmount) > parseInt(balanceApprovalData.approved) ){
-                console.log('suspending', packet.currencyTokenAmount, balanceApprovalData.balance)
-                isNowSuspended = true
-            }
+        
+        
+        })
+        .catch((error) => {
 
-            let updates = {
-                $set: {  suspended: isNowSuspended  } 
-            }
+            console.error("Could not   getBalanceAndApprovalDataForAccount", error);
+ 
+        })
 
-            await this.mongoInterface.updateCustomAndFindOne('bidpackets', { _id: packet._id }, updates   )
 
-        }
+       
  
         await this.mongoInterface.updateCustomAndFindOne('monitored_accounts', {publicAddress:bidderData.publicAddress,currencyTokenAddress:bidderData.currencyTokenAddress }, { $set: {  lastRefreshed: Date.now() }}  )
 
@@ -269,34 +291,76 @@ export default class PacketCustodian  {
 
 
 
-    static async requestMonitorBidderBalance(publicAddress, currencyTokenAddress, chainId, mongoInterface){
-        if(chainId && parseInt(chainId) == parseInt(this.chainId)){
-            await mongoInterface.upsertOne('monitored_accounts', {publicAddress:publicAddress,currencyTokenAddress:currencyTokenAddress }, { publicAddress:publicAddress,currencyTokenAddress:currencyTokenAddress,lastRequested: Date.now() } )
+    static async requestMonitorBidderBalance(publicAddress, currencyTokenAddress, chainId, serverConfig, mongoInterface){
+ 
+        
+        if(chainId && parseInt(chainId) == parseInt(serverConfig.chainId)){
+            await mongoInterface.upsertOne('monitored_accounts', {
+                publicAddress:publicAddress,
+                currencyTokenAddress:currencyTokenAddress  
+            }, 
+                { publicAddress:publicAddress,
+                    currencyTokenAddress:currencyTokenAddress,
+                    currencyTokenChainId: chainId,
+                    lastRequested: Date.now() } )
 
         }else{
-            console.log('tried to request monitor balance for wrong chainId', chainId)
+            console.log('tried to request monitor balance for wrong chainId', chainId, this.chainId)
         }
 
      }
 
 
-      async getBalanceAndApprovalDataForAccount( publicAddress, currencyTokenAddress, mongoInterface){
-        //console.log('getBalanceAndApprovalDataForAccount',currencyTokenAddress)
+      async getBalanceAndApprovalDataForAccount( publicAddress, currencyTokenAddress, currencyTokenChainId, mongoInterface){
+         
+
+
         let chainId = this.chainId 
         let web3 = this.web3
+
+        if(parseInt(chainId) != parseInt(currencyTokenChainId)){
+            console.log('WARN: Invalid chain id for monitored account ', currencyTokenAddress, currencyTokenChainId)
+            return {balance:0,approved:0}
+        }
 
         let contractData = Web3Helper.getContractDataForNetwork(chainId)
  
         let BTFContractAddress = contractData['buythefloor'].address;
 
         let currencyTokenContract = Web3Helper.getCustomContract( ERC20ContractABI, currencyTokenAddress , web3 )
- 
-        let bidderBalance = await currencyTokenContract.methods.balanceOf(publicAddress).call()
-        let bidderApproval = await currencyTokenContract.methods.allowance(publicAddress,BTFContractAddress).call()
+        
+        var bidderBalance = 0
 
-       
-        //console.log('balance', bidderBalance, publicAddress, currencyTokenAddress)
-        return {balance:bidderBalance, approved: bidderApproval }
+
+        return new Promise(
+            (resolve, reject) => {
+
+
+         currencyTokenContract.methods.balanceOf(publicAddress).call().then(async (value) => {
+                                
+                                bidderBalance = 0;
+
+
+                                let bidderApproval = await currencyTokenContract.methods.allowance(publicAddress,BTFContractAddress).call()
+ 
+                                //console.log('balance', bidderBalance, publicAddress, currencyTokenAddress)
+                                resolve ({balance:bidderBalance, approved: bidderApproval })
+
+
+
+                            })
+                            .catch((error) => {
+
+                                console.error("The Promise is rejected!", error);
+
+
+                                reject()  
+                            })
+
+            }) 
+
+
+        
     }
 
 }
