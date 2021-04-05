@@ -48,7 +48,7 @@ export default class PacketCustodian  {
     }
     
     async updatePackets( ){
-        console.log('updating packets')
+        console.log('updating packets', this.mongoInterface)
 
 
         let timeNow = Date.now()
