@@ -156,8 +156,7 @@
 
 
 <script>
-
-//use THE GRAPH 
+ 
  
 import GenericTable from './GenericTable.vue';
 import GenericDropdown from './GenericDropdown.vue';

@@ -6,9 +6,15 @@
   <div>
     
     <div v-for="tokenData of ownedTokenIdsArray" class="m-4 p-2 inline-block border-2 border-black">
-        {{tokenData.tokenId}}
+         <div>  {{tokenData.tokenId}}  </div> 
+
+ 
+        <div>   {{tokenData.typeName}}  </div> 
 
         <div v-if="tokenData.needsWrap">(Must be wrapped to sell)</div>
+
+
+         <a v-bind:href="getLinkToSellToken(tokenData)">  Sell this NFT  </a> 
     </div>
 
     <div v-if="ownedTokenIdsArray.length ==0">
@@ -53,8 +59,11 @@ export default {
   },*/
   mounted(){
       
-      this.nftType = BuyTheFloorHelper.getNameFromContractAddress(this.nftContractAddress, this.projectId, this.web3Plug.getActiveNetId())
-       
+      if(this.nftContractAddress && this.projectId){
+        this.nftType = BuyTheFloorHelper.getNameFromContractAddress(this.nftContractAddress, this.projectId, this.web3Plug.getActiveNetId())
+      
+      }
+      
 
       this.fetchOwnedTokenIds()
 
@@ -65,14 +74,12 @@ export default {
           console.log('nftContractAddress', this.nftContractAddress)
           console.log('nftType', this.nftType)
 
-          if(!this.nftType){
-            this.ownedTokenIdsArray = []
-            return
-          }
+           this.ownedTokenIdsArray = []
+
 
           let activeAddress = this.web3Plug.getActiveAccountAddress()
  
-
+/*
         if(this.nftType.toLowerCase() == 'cryptovoxelsparcels'){
           let nftDataArray = await TheGraphHelper.findCryptovoxelsOwnedBy( activeAddress )
        
@@ -97,13 +104,29 @@ export default {
           let nftDataArray = await TheGraphHelper.findHashmasksOwnedBy( activeAddress )
        
           this.ownedTokenIdsArray = nftDataArray
-        }
+        }*/
 
+
+
+            //fetch nft data from starflask 
+
+
+          if( this.nftType){
+              //filter them !
+
+            return
+          }
 
 
            
           console.log('nftDataArray',this.ownedTokenIdsArray)
           
+       },
+
+
+       getLinkToSellToken(tokenData){
+
+         return '/sell/'
        }
   }
 }

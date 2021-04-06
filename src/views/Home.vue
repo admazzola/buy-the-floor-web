@@ -32,6 +32,7 @@
             </div>
 
               <router-link to="/newbid" class='text-gray-800 text-xl block'>-> Place a Bid for an NFT</router-link>
+ 
 
                <router-link to="/startselling" class='text-gray-800 text-xl block'>-> View and Sell your NFTs</router-link>
             <br>

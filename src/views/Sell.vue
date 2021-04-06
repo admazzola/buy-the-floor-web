@@ -140,7 +140,7 @@ import NotConnectedToWeb3 from './components/NotConnectedToWeb3.vue'
 import BuyTheFloorHelper from '../js/buythefloor-helper.js'
 
 export default {
-  name: 'Home',
+  name: 'Sell',
   props: [],
   components: {Navbar, Footer,NotConnectedToWeb3, ArtTypeTile, NFTSellForm},
   data() {
@@ -151,7 +151,8 @@ export default {
       selectedNFTType: null,
       selectedNFTContractAddress:null ,
       selectedNFTProjectId:null ,
-      typeData: null
+      typeData: null,
+      predefinedTokenId: null
     }
   },
   async created  () {
@@ -222,6 +223,11 @@ export default {
 
               this.typeData = BuyTheFloorHelper.getNFTTypeDataFromName( this.selectedNFTType , chainId ) 
 
+            }
+
+
+            if(!this.$route.params.token_id){
+              this.predefinedTokenId = this.$route.params.token_id
             }
 
 

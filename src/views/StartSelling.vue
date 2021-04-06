@@ -33,19 +33,22 @@
 
             <div  >
 
-              <div class="text-xs  "> Select a type </div>
 
-
-               <ArtTypeTile v-for="type of nftTypes"
-                v-bind:type="type"
-                v-bind:imageURL="type.imgurl" 
+              <NFTGallery 
+              v-bind:web3Plug="web3Plug"
               
-
               />
 
+
+
+
+
+              <div class="text-xs hidden  "> Select a type </div>
+
+ 
  
 
-          </div>
+              </div>
 
 
          
@@ -85,6 +88,7 @@ import Footer from './components/Footer.vue';
 
 import ArtTypeTile from './components/ArtTypeTile.vue'
  
+ import NFTGallery from './components/NFTGallery.vue'
 
 import NotConnectedToWeb3 from './components/NotConnectedToWeb3.vue'
 
@@ -93,7 +97,7 @@ import BuyTheFloorHelper from '../js/buythefloor-helper.js'
 export default {
   name: 'StartSelling',
   props: [],
-  components: {Navbar, Footer,NotConnectedToWeb3, ArtTypeTile },
+  components: {Navbar, Footer,NotConnectedToWeb3, ArtTypeTile, NFTGallery },
   data() {
     return {
       web3Plug: new Web3Plug() ,

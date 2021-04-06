@@ -59,6 +59,13 @@ export default new Router({
       component: Sell
     },
 
+
+    {
+      path: '/sell/:nft_type/:token_id',
+      name: 'sell',
+      component: Sell
+    },
+
     {
       path: '/search/:query',
       name: 'search',
