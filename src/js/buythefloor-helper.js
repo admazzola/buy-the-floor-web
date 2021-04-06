@@ -52,6 +52,8 @@ export default class BuyTheFloorHelper {
   
     
       if(contractDataLookup[networkName][address.toLowerCase()]){ 
+
+        console.log('keys length ', Object.keys(  contractDataLookup[networkName][address.toLowerCase()]  ).length)
   
         let contractUsesProjectId = (Object.keys(  contractDataLookup[networkName][address.toLowerCase()]  ).length > 1)
   
@@ -59,6 +61,7 @@ export default class BuyTheFloorHelper {
   
   
         if(contractUsesProjectId){
+          console.log('contractUsesProjectId',contractUsesProjectId, projectId)
           contractData = contractDataLookup[networkName][address.toLowerCase()][projectId]
         }
   

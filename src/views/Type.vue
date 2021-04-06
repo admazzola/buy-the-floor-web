@@ -44,12 +44,14 @@
 
 
                   <div class="  mt-12  ">
-                         <a v-bind:href="'/newbid/'.concat(typeData.name)" class="select-none bg-teal-300 no-underline p-2   text-black rounded border-black border-2 cursor-pointer"> Place a bid for any {{typeData.label}} </a>
+                         <router-link v-bind:to="'/newbid/'.concat(typeData.name)" class="select-none bg-teal-300 no-underline p-2   text-black rounded border-black border-2 cursor-pointer"> Place a bid for any {{typeData.label}} </router-link>
                     </div>
 
 
                     <div class=" mt-12  ">
-                         <a v-bind:href="'/sell/'.concat(typeData.name)" class="select-none bg-teal-300 no-underline p-2   text-black rounded border-black border-2 cursor-pointer"> Sell your {{typeData.label}} </a>
+                         <router-link v-bind:to="'/sell/'.concat(typeData.name)" class="select-none bg-teal-300 no-underline p-2   text-black rounded border-black border-2 cursor-pointer"> Sell your {{typeData.label}} </router-link>
+                      
+                   
                     </div>
               
               </div>

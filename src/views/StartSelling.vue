@@ -35,6 +35,7 @@
 
 
               <NFTGallery 
+              ref="gallery"
               v-bind:web3Plug="web3Plug"
               
               />
@@ -43,9 +44,14 @@
 
 
 
-              <div class="text-xs hidden  "> Select a type </div>
+              <div class="text-lg font-bold  mt-8  "> All NFT types </div>
 
- 
+                   <ArtTypeTile v-for="type of nftTypes"
+                      v-bind:type="type"
+                      v-bind:imageURL="type.imgurl" 
+                    
+
+                    />
  
 
               </div>
@@ -115,8 +121,14 @@ export default {
          
         this.connectedToWeb3 = this.web3Plug.connectedToWeb3()
         this.nftTypes = BuyTheFloorHelper.getClientConfigForNetworkId(this.web3Plug.getActiveNetId()).nftTypes
-    
 
+        if(this.$refs.gallery){
+          this.$refs.gallery.fetchOwnedTokenIds()
+        }
+        
+
+
+        
       }.bind(this));
    this.web3Plug.getPlugEventEmitter().on('error', function(errormessage) {
         console.error('error',errormessage);

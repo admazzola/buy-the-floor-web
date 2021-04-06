@@ -16,7 +16,7 @@
         "minBidAmount": 0.02
       }
     },
-    "": { "0": { "address": "" } },
+    "0x392d7bda765d8bbe626abeb2127e6d6395eff44c": { "0": { "address": "0x392d7bda765d8bbe626abeb2127e6d6395eff44c" } },
     "0xc2c747e0f7004f9e8817db2ca4997657a7746928": { "0": { "name": "Hashmasks", "address": "0xc2c747e0f7004f9e8817db2ca4997657a7746928" } },
     "0x6c10511ddea5f3ed38a0163224198e37b81525bc": { "0": { "name": "0xBitcoinMemes", "address": "0x6c10511ddea5f3ed38a0163224198e37b81525bc" } },
     "0x7c40c393dc0f283f318791d746d894ddd3693572": {
@@ -44,25 +44,27 @@
         "name": "ChromieSquiggles",
         "address": "0x059edd72cd353df5106d2b9cc5ab83a52287ac3a",
         "projectId": 0
-      },
+      }
+    },
+    "0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270": {
       "9": {
         "name": "Ignition",
-        "address": "0x059edd72cd353df5106d2b9cc5ab83a52287ac3a",
+        "address": "0xa7d8d9ef8D8Ce8992Df33D8b8CF4Aebabd5bD270",
         "projectId": 9
       },
       "10": {
         "name": "Nimbuds",
-        "address": "0x059edd72cd353df5106d2b9cc5ab83a52287ac3a",
+        "address": "0xa7d8d9ef8D8Ce8992Df33D8b8CF4Aebabd5bD270",
         "projectId": 10
       },
       "13": {
         "name": "Ringers",
-        "address": "0x059edd72cd353df5106d2b9cc5ab83a52287ac3a",
+        "address": "0xa7d8d9ef8D8Ce8992Df33D8b8CF4Aebabd5bD270",
         "projectId": 13
       },
       "23": {
         "name": "Archetype",
-        "address": "0x059edd72cd353df5106d2b9cc5ab83a52287ac3a",
+        "address": "0xa7d8d9ef8D8Ce8992Df33D8b8CF4Aebabd5bD270",
         "projectId": 23
       }
     }

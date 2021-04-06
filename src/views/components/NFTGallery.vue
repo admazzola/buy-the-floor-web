@@ -16,7 +16,7 @@
         <div v-if="tokenData.needsWrap">(Must be wrapped to sell)</div>
 
 
-         <a class="text-xs p-1 bg-blue-500 no-underline rounded text-white" v-bind:href="getLinkToSellToken(tokenData)">  Sell this NFT  </a> 
+         <router-link class="text-xs p-1 bg-blue-500 no-underline rounded text-white" v-bind:to="getLinkToSellToken(tokenData)">  Sell this NFT  </router-link> 
     </div>
 
     <div v-if="ownedTokenIdsArray.length ==0">
@@ -81,7 +81,7 @@ export default {
           console.log('nftContractAddress', this.nftContractAddress)
           console.log('nftType', this.nftType)
 
-           this.ownedTokenIdsArray = []
+          
 
 
           let activeAddress = this.web3Plug.getActiveAccountAddress()
@@ -121,6 +121,8 @@ export default {
 
           let nftArrayResult = await this.fetchOwnedAssets(activeAddress)
           console.log('nftArrayResult',nftArrayResult)
+
+           this.ownedTokenIdsArray = []
 
           if(nftArrayResult.success == true){
             let nftContractsArray = nftArrayResult.output 

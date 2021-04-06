@@ -24,7 +24,7 @@
             <div class="w-row">
                
                    <div class="mb-4">
-                          <a href="/startselling"  class="px-2 no-underline rounded text-xs select-none inline-block cursor-pointer bg-purple-500 text-white"> < Go Back </a>
+                          <router-link to="/startselling"  class="px-2 no-underline rounded text-xs select-none inline-block cursor-pointer bg-purple-500 text-white"> < Go Back </router-link>
                     </div>
                
 
@@ -169,7 +169,8 @@ export default {
          
         this.activeAccountAddress = this.web3Plug.getActiveAccountAddress()//connectionState.activeAccountAddress
         this.activeNetworkId = this.web3Plug.getActiveNetId()//connectionState.activeNetworkId
-         
+      
+        console.log('connected to web3')
         this.connectedToWeb3 = this.web3Plug.connectedToWeb3()
         this.nftTypes = BuyTheFloorHelper.getClientConfigForNetworkId(this.web3Plug.getActiveNetId()).nftTypes
 
@@ -188,7 +189,7 @@ export default {
         
       }.bind(this));
 
-     this.web3Plug.reconnectWeb()
+        this.web3Plug.reconnectWeb()
    // await this.web3Plug.reconnectWeb()
 
 
@@ -204,13 +205,16 @@ export default {
   async mounted(){
 
 
+         this.web3Plug.reconnectWeb()
+
+
       if( this.$route.params.token_id){
         this.predefinedTokenId = this.$route.params.token_id
       }
 
 
     Vue.nextTick(function () {
-      if(this.predefinedTokenId){
+      if(this.$refs.nftSellForm && this.predefinedTokenId){
         this.$refs.nftSellForm.setPredefinedTokenId( this.predefinedTokenId )
       }
     

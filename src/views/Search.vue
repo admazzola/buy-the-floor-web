@@ -36,7 +36,7 @@
 
                <div v-for="result of searchResults"> 
  
-                 <a v-bind:href="'/type/'.concat(result.name)" > {{result.name}} </a> 
+                 <router-link v-bind:to="'/type/'.concat(result.name)" > {{result.name}} </router-link> 
                </div>
                 
 
