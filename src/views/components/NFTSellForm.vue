@@ -337,6 +337,12 @@ export default {
      
         },
 
+
+        setPredefinedTokenId(tokenId){
+          console.log('setPredefinedTokenId',tokenId)
+          this.nftTokenIdToSell = tokenId
+        },
+
         resetForm(){
          this.ownedTokenIdToSell = null
          this.selectedBidPacket = null 

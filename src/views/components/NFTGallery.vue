@@ -1,20 +1,22 @@
 <template>
   <div class=" ">
       
-     <div> Your owned token IDs: </div> 
+     <div> Your NFTs: </div> 
 
   <div>
     
     <div v-for="tokenData of ownedTokenIdsArray" class="m-4 p-2 inline-block border-2 border-black">
-         <div>  {{tokenData.tokenId}}  </div> 
+         
 
  
         <div>   {{tokenData.typeName}}  </div> 
 
+        <div class="text-xs"> Id: {{tokenData.tokenId}}  </div> 
+
         <div v-if="tokenData.needsWrap">(Must be wrapped to sell)</div>
 
 
-         <a v-bind:href="getLinkToSellToken(tokenData)">  Sell this NFT  </a> 
+         <a class="text-xs p-1 bg-blue-500 no-underline rounded text-white" v-bind:href="getLinkToSellToken(tokenData)">  Sell this NFT  </a> 
     </div>
 
     <div v-if="ownedTokenIdsArray.length ==0">
@@ -31,7 +33,11 @@
 
 //use THE GRAPH 
 
+import web3utils from 'web3-utils'
+
 import TheGraphHelper from '../../js/the-graph-helper.js'
+import StarflaskAPIHelper from '../../js/starflask-api-helper.js'
+
 import NFTHelper from '../../js/nft-helper.js'
 
 import BuyTheFloorHelper from '../../js/buythefloor-helper.js'
@@ -58,11 +64,12 @@ export default {
     } 
   },*/
   mounted(){
+
       
-      if(this.nftContractAddress && this.projectId){
+      /*if(this.nftContractAddress && this.projectId){
         this.nftType = BuyTheFloorHelper.getNameFromContractAddress(this.nftContractAddress, this.projectId, this.web3Plug.getActiveNetId())
       
-      }
+      }*/
       
 
       this.fetchOwnedTokenIds()
@@ -78,6 +85,8 @@ export default {
 
 
           let activeAddress = this.web3Plug.getActiveAccountAddress()
+
+          let chainId = this.web3Plug.getActiveNetId()
  
 /*
         if(this.nftType.toLowerCase() == 'cryptovoxelsparcels'){
@@ -110,12 +119,50 @@ export default {
 
             //fetch nft data from starflask 
 
+          let nftArrayResult = await this.fetchOwnedAssets(activeAddress)
+          console.log('nftArrayResult',nftArrayResult)
 
-          if( this.nftType){
-              //filter them !
+          if(nftArrayResult.success == true){
+            let nftContractsArray = nftArrayResult.output 
 
-            return
+            for(let nftContractData of nftContractsArray){
+
+              for(let tokenId of nftContractData.tokenIds){
+
+                 let projectId = BuyTheFloorHelper.getProjectIdFromTokenId(tokenId)
+
+                 let canBeSold = BuyTheFloorHelper.contractAddressAssetCanBeSold(nftContractData.contractAddress,projectId, chainId)
+
+                 if(!canBeSold)continue;  
+
+                 let nftTypeName = BuyTheFloorHelper.getNameFromContractAddress(nftContractData.contractAddress,projectId, chainId )
+
+                this.ownedTokenIdsArray.push({
+                  contractAddress: web3utils.toChecksumAddress( nftContractData.contractAddress ),
+                  typeName: nftTypeName,
+                  tokenId: tokenId
+
+                })
+              }
+
+            }
+
+           
           }
+
+          
+
+         if(this.nftContractAddress  ){
+
+           let nftContractAddress = web3utils.toChecksumAddress(this.nftContractAddress)
+         // this.nftType = BuyTheFloorHelper.getNameFromContractAddress(this.nftContractAddress, this.projectId, this.web3Plug.getActiveNetId())
+              
+              //filter them !
+             this.ownedTokenIdsArray =  this.ownedTokenIdsArray.filter(item => (item.contractAddress == nftContractAddress))
+           
+          }
+          
+
 
 
            
@@ -123,10 +170,24 @@ export default {
           
        },
 
+         async fetchOwnedAssets(publicAddress){
+
+
+           let apiKey = 'testApiKey'
+
+            let apiURI = `http://api.starflask.com/api/v1/${apiKey}`
+            let inputData = {requestType: 'all_ERC721', input: { publicAddress: publicAddress  } } 
+            let results = await StarflaskAPIHelper.resolveStarflaskQuery(apiURI ,  inputData   )
+            console.log(results)
+             return results
+          },
+
+
+
 
        getLinkToSellToken(tokenData){
 
-         return '/sell/'
+         return '/sell/'.concat(tokenData.typeName).concat('/').concat(tokenData.tokenId)
        }
   }
 }

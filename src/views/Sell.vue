@@ -87,10 +87,11 @@
                
 
                <NFTSellForm
+                 ref="nftSellForm"
                 v-bind:nftContractAddress="selectedNFTContractAddress"
                 v-bind:projectId="selectedNFTProjectId"
                   v-bind:web3Plug="web3Plug"
-                  v-bind:connectedToWeb3="connectedToWeb3"
+                  v-bind:connectedToWeb3="connectedToWeb3" 
 
                 />
 
@@ -123,7 +124,7 @@
 
 <script>
 
-
+import Vue from 'vue'
 
 import Web3Plug from '../js/web3-plug.js' 
 
@@ -201,7 +202,21 @@ export default {
 
   }, 
   async mounted(){
-     
+
+
+      if( this.$route.params.token_id){
+        this.predefinedTokenId = this.$route.params.token_id
+      }
+
+
+    Vue.nextTick(function () {
+      if(this.predefinedTokenId){
+        this.$refs.nftSellForm.setPredefinedTokenId( this.predefinedTokenId )
+      }
+    
+    }.bind(this))
+        
+   
 
   },
   beforeDestroy(){
@@ -226,9 +241,6 @@ export default {
             }
 
 
-            if(!this.$route.params.token_id){
-              this.predefinedTokenId = this.$route.params.token_id
-            }
 
 
         },

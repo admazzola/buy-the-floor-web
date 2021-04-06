@@ -32,7 +32,46 @@ export default class BuyTheFloorHelper {
 
 
     }
+
+    //only works for artblocks 
+    static getProjectIdFromTokenId(tokenId){
+      return (tokenId/1000000);
+    }
      
+
+
+    static contractAddressAssetCanBeSold( address,projectId, netId )
+    {
+      let networkName = 'mainnet'
+      if(netId == 5){
+        networkName = 'goerli'
+      }
+  
+      projectId = parseInt(projectId)
+      if(isNaN(projectId))projectId=0;
+  
+    
+      if(contractDataLookup[networkName][address.toLowerCase()]){ 
+  
+        let contractUsesProjectId = (Object.keys(  contractDataLookup[networkName][address.toLowerCase()]  ).length > 1)
+  
+        let contractData = contractDataLookup[networkName][address.toLowerCase()][0]
+  
+  
+        if(contractUsesProjectId){
+          contractData = contractDataLookup[networkName][address.toLowerCase()][projectId]
+        }
+  
+        if(contractData){
+          return  true 
+        }
+      }
+      
+       
+   
+      return  false 
+    }
+
 
     static getNameFromContractAddress( address,projectId, netId )
   {
@@ -46,8 +85,20 @@ export default class BuyTheFloorHelper {
 
     console.log('get name', contractDataLookup[networkName] , address, projectId)
 
-    if(contractDataLookup[networkName][address.toLowerCase()]){
-      let contractData = contractDataLookup[networkName][address.toLowerCase()][projectId]
+
+    
+
+    if(contractDataLookup[networkName][address.toLowerCase()]){ 
+
+      let contractUsesProjectId = (Object.keys(  contractDataLookup[networkName][address.toLowerCase()]  ).length > 1)
+
+      let contractData = contractDataLookup[networkName][address.toLowerCase()][0]
+
+
+      if(contractUsesProjectId){
+        contractData = contractDataLookup[networkName][address.toLowerCase()][projectId]
+      }
+
       if(contractData){
         return contractData.name 
       }
