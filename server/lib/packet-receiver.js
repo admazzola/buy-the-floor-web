@@ -69,15 +69,7 @@ export default class PacketReceiver  {
     async startWebServer(app, apiPort){
 
 
-      const staticFileMiddleware = express.static('dist');
-      app.use(staticFileMiddleware);
-      app.use(history({
-        disableDotRule: true,
-        verbose: true
-      }));
-      app.use(staticFileMiddleware);
-
-      
+     
 
 
       app.get('/api/v1/:query', async (req, res) => {         
@@ -95,6 +87,16 @@ export default class PacketReceiver  {
         res.send(response)
       })
 
+      const staticFileMiddleware = express.static('dist');
+      app.use(staticFileMiddleware);
+      app.use(history({
+        disableDotRule: true,
+        verbose: true
+      }));
+      app.use(staticFileMiddleware);
+
+
+
       /*
       app.get('/api/v1/:apikey/:query', async (req, res) => {
          
@@ -106,7 +108,7 @@ export default class PacketReceiver  {
 
 
       app.listen(apiPort, () => {
-        console.log(`Example app listening at http://localhost:${apiPort}`)
+        console.log(`App listening at http://localhost:${apiPort}`)
       })
 
 
