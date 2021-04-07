@@ -140,7 +140,7 @@
                     </div>
 
                     <div @click="resetForm" class="select-none bg-teal-300 p-2 inline-block rounded border-black border-2 cursor-pointer"> Place another bid </div>
-                    <a href="/dashboard" class="select-none bg-teal-300 p-2 inline-block rounded border-black border-2 cursor-pointer no-underline text-black mx-2"> View my Bids </a>
+                    <router-link to="/dashboard" class="select-none bg-teal-300 p-2 inline-block rounded border-black border-2 cursor-pointer no-underline text-black mx-2"> View my Bids </router-link>
          
 
                   </div>
