@@ -1,7 +1,7 @@
 {
    
     "production":{
-        "SOCKET_URL": "wss://v2.buythefloor.com:8443",
+        "SOCKET_URL": "wss://buythefloor.com:8443",
 
 
 
