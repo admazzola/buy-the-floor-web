@@ -5,6 +5,9 @@
  import cors from 'cors'
 import fs from 'fs'
 
+import  history from 'connect-history-api-fallback'
+
+
 import PacketHelper from './packet-helper.js'
 import { Server } from "socket.io";
 
@@ -64,6 +67,18 @@ export default class PacketReceiver  {
 
 
     async startWebServer(app, apiPort){
+
+
+      const staticFileMiddleware = express.static('dist');
+      app.use(staticFileMiddleware);
+      app.use(history({
+        disableDotRule: true,
+        verbose: true
+      }));
+      app.use(staticFileMiddleware);
+
+      
+
 
       app.get('/api/v1/:query', async (req, res) => {         
           
