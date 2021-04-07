@@ -175,6 +175,9 @@ export default class PacketCustodian  {
         //let buyerAddress = packet.bidderAddress 
 
 
+        let tokenDataSynced = false
+
+
         let tokenData = await APIHelper.getDataForToken( packet.currencyTokenAddress, this.wolfpackInterface   )
         const ONE_HOUR = 60*60*1000;
 
@@ -183,6 +186,8 @@ export default class PacketCustodian  {
             let balanceApprovalData = await APIHelper.getUserBalanceApprovalForToken( packet.bidderAddress, packet.currencyTokenAddress, BTFContractAddress, this.wolfpackInterface    )
             console.log('monitoring bid with synced data ',balanceApprovalData )
             
+            tokenDataSynced = true
+
             if( new BigNumber(balanceApprovalData.balance).isLessThan(parseInt(packet.currencyTokenAmount))  ){
                 console.log('suspending', packet.currencyTokenAmount, balanceApprovalData.balance)
                 isNowSuspended = true
@@ -227,6 +232,12 @@ export default class PacketCustodian  {
         }
 
         if(isNowSuspended){
+            updates = {
+                $set: {  status:newStatus, lastRefreshed: Date.now(), suspended: isNowSuspended  } 
+            }
+        } 
+
+        if(tokenDataSynced && !isNowSuspended){
             updates = {
                 $set: {  status:newStatus, lastRefreshed: Date.now(), suspended: isNowSuspended  } 
             }
