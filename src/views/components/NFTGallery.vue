@@ -175,9 +175,9 @@ export default {
          async fetchOwnedAssets(publicAddress){
 
 
-           let apiKey = 'testApiKey'
+            let apiKey = 'testApiKey'
 
-            let apiURI = `http://api.starflask.com/api/v1/${apiKey}`
+            let apiURI = `https://api.starflask.com/api/v1/${apiKey}`
             let inputData = {requestType: 'all_ERC721', input: { publicAddress: publicAddress  } } 
             let results = await StarflaskAPIHelper.resolveStarflaskQuery(apiURI ,  inputData   )
             console.log(results)
