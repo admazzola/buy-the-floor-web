@@ -156,7 +156,7 @@ export default class BuyTheFloorHelper {
       nftTypes[type.name] = type
     }
 
-    return nftTypes[name]
+    return nftTypes[name.toLowerCase()]
   }
 
 

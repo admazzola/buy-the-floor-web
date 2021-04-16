@@ -37,17 +37,30 @@
    <div class="section  bg-white border-b-2 border-black">
      <div class="autospacing w-container p-2">
         
-       <div class="w-row text-xs">
-          <div class="text-lg font-bold"> Bid Information </div>
-          <div>  bidder: <a  target="_blank" v-bind:href="web3Plug.getExplorerLinkForAddress(bidPacketData.bidderAddress)">  {{bidPacketData.bidderAddress}} </a> </div>
-          <div> network: {{ bidPacketData.bidNetworkName }} </div>
-          <div> nftType: <a   v-bind:href="'/type/'.concat(bidPacketData.nftContractName)">  {{bidPacketData.nftContractName}}  </a></div>
-          <div> bid payment: {{bidPacketData.currencyTokenAmountFormatted}} <a  target="_blank" v-bind:href="web3Plug.getExplorerLinkForAddress(bidPacketData.currencyTokenAddress)"> {{bidPacketData.currencyTokenName}} </a> </div>
-          
-          <div v-if="bidPacketData.expirationFormatted != null"> expiration:  ~{{bidPacketData.expirationFormatted}} days </div>
-          <div> status:  {{bidPacketData.status}}</div>
-          <div> suspended:  {{bidPacketData.suspended}}</div>
+       <div class="w-row text-xs border-2 border-gray-500 rounded">
 
+         <div class=" flex flex-col lg:flex-row "> 
+              <div class=" flex-grow  p-2">   
+                <div class="text-lg font-bold"> Bid Information </div>
+                <div>  bidder: <a  target="_blank" v-bind:href="web3Plug.getExplorerLinkForAddress(bidPacketData.bidderAddress)">  {{bidPacketData.bidderAddress}} </a> </div>
+                <div> network: {{ bidPacketData.bidNetworkName }} </div>
+                <div> nftType: <a   v-bind:href="'/type/'.concat(bidPacketData.nftContractName)">  {{bidPacketData.nftContractName}}  </a></div>
+                <div> bid payment: {{bidPacketData.currencyTokenAmountFormatted}} <a  target="_blank" v-bind:href="web3Plug.getExplorerLinkForAddress(bidPacketData.currencyTokenAddress)"> {{bidPacketData.currencyTokenName}} </a> </div>
+                
+                <div v-if="bidPacketData.expirationFormatted != null"> expiration:  ~{{bidPacketData.expirationFormatted}} days </div>
+                <div> status:  {{bidPacketData.status}}</div>
+                <div class="hidden" > suspended:  {{bidPacketData.suspended}}</div>
+              </div> 
+              <div class="  p-4 flex flex-row">
+                <div class="flex-grow"></div>
+                <div class=" " v-if="typeData" >   
+                      <div class="p-2 border-black border-2 ">
+                      <img v-bind:src="typeData.imgurl" width="128" height="128"  /> 
+                      </div>
+                  </div> 
+            
+                </div> 
+          </div> 
 
          <div v-cloak class="my-8 bg-red-200 p-2 md:flex md:flex-row" v-if="suspensionAlertVisible()">
            
@@ -70,17 +83,23 @@
 
          </div>
 
-           <div class="my-8">
+           <div class="my-8 p-2">
 
-        <div v-cloak @click="cancelBid()" v-if="userIsOwnerOfBid() && !bidHasBeenBurned()" class="select-none bg-teal-300 p-2 inline-block rounded border-black border-2 cursor-pointer"> Cancel bid </div>
-           <a v-cloak v-if="!bidHasBeenBurned()"  v-bind:href='"/sell/".concat(bidPacketData.nftContractName)' class="mx-2 select-none bg-teal-300 p-2 no-underline inline-block rounded border-black border-2 cursor-pointer text-black text-md"> Fulfill this bid </a>
+              <div v-cloak @click="cancelBid()" v-if="userIsOwnerOfBid() && !bidHasBeenBurned()" class="select-none bg-teal-300 p-2 inline-block rounded border-black border-2 cursor-pointer"> Cancel bid </div>
+              <a v-cloak v-if="!bidHasBeenBurned()"  v-bind:href='"/sell/".concat(bidPacketData.nftContractName)' class="mx-2 select-none bg-teal-300 p-2 no-underline inline-block rounded border-black border-2 cursor-pointer text-black text-md"> Fulfill this bid </a>
          
         </div>
 
+      </div>
+     <div class="w-row text-xs ">
+
+
           <div class="my-4"></div>
 
-          <div class="overflow-x-auto">
-          <div class="text-md font-bold"> Advanced Information </div>
+          <div class="p-2 my-4 bg-blue-400 text-white rounded no-select inline-block cursor-pointer" @click="showAdvanced=!showAdvanced"> Show advanced information </div>
+
+          <div class="overflow-x-auto" v-if="showAdvanced">
+          <div class="text-md font-bold  "> Advanced Information </div>
 
           <div>  bidder: <a  target="_blank" v-bind:href="web3Plug.getExplorerLinkForAddress(bidPacketData.bidderAddress)">  {{bidPacketData.bidderAddress}} </a> </div>
           <div>  nftContractAddress: <a  target="_blank" v-bind:href="web3Plug.getExplorerLinkForAddress(bidPacketData.nftContractAddress)"> {{bidPacketData.nftContractAddress}} </a>  ( {{bidPacketData.nftContractName}} ) </div>
@@ -92,7 +111,7 @@
 
             <div v-if="bidPacketData.signature"> signature:  {{bidPacketData.signature.signature}}</div>
             <div> status:  {{bidPacketData.status}}</div>
-             <div> suspended:  {{bidPacketData.suspended}}</div>
+             <div > suspended:  {{bidPacketData.suspended}}</div>
 
           </div>
        </div>
@@ -148,6 +167,9 @@ export default {
       tokenBalances:{},
       tokensApproved:{},
       currentBlockNumber: null,
+      showAdvanced:false,
+
+      typeData: null,
 
       ApproveAllAmount: "1000000000000000000000000000000",
     }
@@ -234,8 +256,10 @@ export default {
         
         this.bidPacketData.nftContractName = BuyTheFloorHelper.getNameFromContractAddress(this.bidPacketData.nftContractAddress, this.bidPacketData.projectId, chainId)
         this.bidPacketData.currencyTokenName = BuyTheFloorHelper.getNameFromContractAddress(this.bidPacketData.currencyTokenAddress, 0, chainId)
-         
- 
+
+             console.log('this.bidPacketData.nftContractName',this.bidPacketData.nftContractName)
+        this.typeData = BuyTheFloorHelper.getNFTTypeDataFromName(this.bidPacketData.nftContractName , chainId ) // nftTypes[this.nftTypeName]
+        console.log('this.typeData',this.typeData)
         
         this.bidPacketData.currencyTokenAmountFormatted = BuyTheFloorHelper.getFormattedCurrencyAmount( this.bidPacketData.currencyTokenAmount, this.bidPacketData.currencyTokenAddress, chainId)
         

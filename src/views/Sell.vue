@@ -66,24 +66,25 @@
 
 
 
-            <div class="flex flex-row">
+            <div class="flex flex-col lg:flex-row">
             
 
                   
 
-                  <div class="text-md  " v-if="typeData"> Selected Type: <a v-bind:href="'/type/'.concat(typeData.name)" > {{selectedNFTType}} </a> </div>
+                  <div class="text-md flex-grow  " v-if="typeData"> Selected Type: <a v-bind:href="'/type/'.concat(typeData.name)" > {{selectedNFTType}} </a> </div>
                   
 
 
-                
+
+                  <div class="  mt-4 text-center" v-if="typeData">
+                    <div class="border-2 border-black p-2 inline-block">
+                    <img v-bind:src="typeData.imgurl" width="128" height="128" />
+                  </div> 
+                 </div>
 
 
             </div>
 
-                  <div class="  mt-4  " v-if="typeData">
-
-                    <img v-bind:src="typeData.imgurl" width="128" height="128" />
-                  </div>
                
 
                <NFTSellForm
