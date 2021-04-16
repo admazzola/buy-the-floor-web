@@ -376,8 +376,7 @@ export default class MongoInterface  {
 
     async findAll(collectionName,query,outputFields)
     {
-    //  var query = { address: "Park Lane 38" };
-    //  var filter = { _id: 0, name: 1, address: 1 };
+    
       return new Promise(function(resolve, reject) {
 
         this.dbo.collection(collectionName).find(query, outputFields).toArray(function(err, res) {

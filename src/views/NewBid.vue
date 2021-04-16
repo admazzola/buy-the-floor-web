@@ -32,6 +32,7 @@
                 <label   class="block text-md font-medium font-bold text-gray-800  ">NFT Type To Buy The Floor</label>
                 
                 <GenericDropdown
+                  ref="nftOptionList"
                   v-bind:optionList="nftOptionsList" 
                   v-bind:onSelectCallback="onNFTSelectCallback"
                 />
@@ -67,7 +68,7 @@
 
               <div class="flex flex-row">
               <div class="w-1/2 px-4">
-                    <input type="number" v-on:blur="restrictBidAmount()"  v-model="formInputs.tokenBidAmountFormatted"  class="text-gray-900 border-2 border-black font-bold px-4 text-xl focus:ring-indigo-500 focus:border-indigo-500 block w-full py-4 pl-7 pr-12   border-gray-300 rounded-md" placeholder="0.00">
+                    <input type="number"   v-model="formInputs.tokenBidAmountFormatted"  class="text-gray-900 border-2 border-black font-bold px-4 text-xl focus:ring-indigo-500 focus:border-indigo-500 block w-full py-4 pl-7 pr-12   border-gray-300 rounded-md" placeholder="0.00">
                 </div>
 
                   <div class="w-1/2 px-4" @click="approveCurrencyToken" v-if=" approveButtonVisible()">
@@ -97,15 +98,19 @@
 
 
           <hr>
-          <div class="py-4" v-if="selectedCurrencyIsApproved() && !bidSubmitComplete">
+          <div class="py-4" v-if=" connectedToWeb3 && !bidSubmitComplete">
              
  
 
             <div> nftAddress: <a  target="_blank" v-bind:href="web3Plug.getExplorerLinkForAddress(formInputs.nftContractAddress)"> {{formInputs.nftContractAddress}} </a> </div>
 
+            <div v-if="this.formInputs.requireProjectId" > projectId: {{ this.formInputs.projectId }} </div>
+
             <div> CurrencyAddress: <a  target="_blank" v-bind:href="web3Plug.getExplorerLinkForAddress(formInputs.tokenContractAddress)"> {{formInputs.tokenContractAddress}} </a> </div>
 
-            <div> bidAmountRaw: {{getTokenBidAmountRaw()}}</div>
+            <div> bidAmount: {{getTokenBidAmountFormatted()}}</div>
+
+            <div class="hidden"> bidAmountRaw: {{getTokenBidAmountRaw()}}</div>
 
             <div> Decimals: {{this.formInputs.tokenDecimals}}</div>
 
@@ -135,7 +140,7 @@
                     </div>
 
                     <div @click="resetForm" class="select-none bg-teal-300 p-2 inline-block rounded border-black border-2 cursor-pointer"> Place another bid </div>
-                    <a href="/dashboard" class="select-none bg-teal-300 p-2 inline-block rounded border-black border-2 cursor-pointer no-underline text-black mx-2"> View my Bids </a>
+                    <router-link to="/dashboard" class="select-none bg-teal-300 p-2 inline-block rounded border-black border-2 cursor-pointer no-underline text-black mx-2"> View my Bids </router-link>
          
 
                   </div>
@@ -186,7 +191,7 @@
 
 <script>
 
-
+import Vue from 'vue'
 
 import Web3Plug from '../js/web3-plug.js' 
 
@@ -211,7 +216,7 @@ import NotConnectedToWeb3 from './components/NotConnectedToWeb3.vue'
 var updateTimer;
 
 export default {
-  name: 'Home',
+  name: 'NewBid',
   props: [ ],
   components: {Navbar, Footer, GenericDropdown,NotConnectedToWeb3},
   data() {
@@ -268,6 +273,10 @@ export default {
        
         console.log(' this.currencyTokensOptionsList',  this.currencyTokensOptionsList)
 
+         Vue.nextTick(() => {
+              this.autoFillNFTType()
+         })
+
       }.bind(this));
    this.web3Plug.getPlugEventEmitter().on('error', function(errormessage) {
         console.error('error',errormessage);
@@ -276,7 +285,7 @@ export default {
         
       }.bind(this));
 
-
+     
       
     
 
@@ -287,7 +296,8 @@ export default {
       this.web3Plug.reconnectWeb()
 
       updateTimer = setInterval(this.updateBalances.bind(this), 5000);
-   
+
+      
     
   }, 
 
@@ -295,6 +305,18 @@ export default {
       clearInterval(updateTimer) 
   },
   methods: {
+
+    async autoFillNFTType(){
+
+        if(this.$route.params.nft_type){
+            this.selectedNFTType = this.$route.params.nft_type.toLowerCase()
+            console.log('this.selectedNFTType',this.selectedNFTType)
+
+            console.log('this.$refs',this.$refs, this.$refs.nftOptionList)
+            this.$refs.nftOptionList.selectOptionByName( this.selectedNFTType )
+          }
+
+    },
          
          async updateBalances(){
           
@@ -349,6 +371,8 @@ export default {
            let contractData = this.web3Plug.getContractDataForActiveNetwork() 
  
            let btfContractAddress = contractData['buythefloor'].address
+
+           let expiresAtBlock = this.getExpiresAtBlock()
               
 
            let args = [
@@ -356,7 +380,9 @@ export default {
               this.formInputs.nftContractAddress,
               this.formInputs.tokenContractAddress,              
               this.getTokenBidAmountRaw(),
-              this.getExpiresAtBlock()
+              this.formInputs.requireProjectId, 
+              this.formInputs.projectId, 
+              expiresAtBlock
              // this.formInputs.expiresAtBlock
            ]
 
@@ -368,12 +394,22 @@ export default {
               this.formInputs.nftContractAddress,
               this.formInputs.tokenContractAddress,              
               this.getTokenBidAmountRaw(),
-               this.getExpiresAtBlock(), 
+              this.formInputs.requireProjectId, 
+              this.formInputs.projectId, 
+              expiresAtBlock,
               signature
                 )
-
+ 
               packetData.exchangeContractAddress = btfContractAddress
 
+             /* let typedData = BidPacketUtils.getBidTypedDataFromParams(this.web3Plug.getActiveNetId(),btfContractAddress,  ...args  )
+              let recoveredSigner = BidPacketUtils.recoverBidPacketSigner( typedData ,signature.signature)
+                console.log('recoveredSigner', recoveredSigner)
+
+                if( recoveredSigner !=  this.web3Plug.getActiveAccountAddress()  ){
+                    console.log('incorrect signer recovered')
+                  return 
+                }*/
 
               
                 var hostname = window.location.hostname; 
@@ -399,9 +435,16 @@ export default {
           let contractData = this.web3Plug.getContractDataForActiveNetwork()
           let nftContract = contractData[optionData.name]
 
- 
+          
           this.formInputs.nftContractAddress = nftContract.address
+          this.formInputs.projectId = parseInt(nftContract.projectId)  
 
+          if(isNaN(this.formInputs.projectId)){
+            this.formInputs.requireProjectId = false;
+            this.formInputs.projectId=0;
+          }else{
+            this.formInputs.requireProjectId = true;
+          }
           //this.updateBalances();
         },
         onCurrencySelectCallback(optionData){
@@ -412,18 +455,24 @@ export default {
 
           let tokenContract = contractData[optionData.name]
           
+         
           this.formInputs.tokenDecimals = tokenContract.decimals
           this.formInputs.tokenContractAddress = tokenContract.address
           
           this.updateBalances();
 
-          this.restrictBidAmount()
+          //this.restrictBidAmount()
 
            
         },
         getTokenBidAmountRaw(){
           return this.web3Plug.formattedAmountToRaw( this.formInputs.tokenBidAmountFormatted, this.formInputs.tokenDecimals ) 
         },
+
+         getTokenBidAmountFormatted(){
+          return this.web3Plug.rawAmountToFormatted( this.getTokenBidAmountRaw(), this.formInputs.tokenDecimals ) 
+        },
+
         getExpiresAtBlock(){
           return ( parseInt(this.currentBlockNumber) + parseInt(this.formInputs.expiresInBlocks))
         },
@@ -443,11 +492,11 @@ export default {
             this.formInputs.expiresInBlocks = this.maxExpiresInBlocks
           }
         },
-        restrictBidAmount(){
+       /* restrictBidAmount(){
           if(parseFloat(this.formInputs.tokenBidAmountFormatted) > this.getSelectedCurrencyBalanceFormatted() ){
             this.formInputs.tokenBidAmountFormatted = this.getSelectedCurrencyBalanceFormatted()
           }
-        },
+        },*/
         getDaysFromBlocks(blocks){
           return parseFloat(blocks / 5760).toFixed(2)
         }

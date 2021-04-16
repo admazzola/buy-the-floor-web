@@ -30,7 +30,7 @@ export default {
       
       getLinkUrl(){
 
-        return '/sell/'.concat(this.type.name.toLowerCase())
+        return '/type/'.concat(this.type.name.toLowerCase())
 
       }
   }

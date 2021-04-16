@@ -41,17 +41,39 @@
           <div class="text-lg font-bold"> Bid Information </div>
           <div>  bidder: <a  target="_blank" v-bind:href="web3Plug.getExplorerLinkForAddress(bidPacketData.bidderAddress)">  {{bidPacketData.bidderAddress}} </a> </div>
           <div> network: {{ bidPacketData.bidNetworkName }} </div>
-          <div> nftType: <a  target="_blank" v-bind:href="web3Plug.getExplorerLinkForAddress(bidPacketData.nftContractAddress)">  {{bidPacketData.nftContractName}}  </a></div>
+          <div> nftType: <a   v-bind:href="'/type/'.concat(bidPacketData.nftContractName)">  {{bidPacketData.nftContractName}}  </a></div>
           <div> bid payment: {{bidPacketData.currencyTokenAmountFormatted}} <a  target="_blank" v-bind:href="web3Plug.getExplorerLinkForAddress(bidPacketData.currencyTokenAddress)"> {{bidPacketData.currencyTokenName}} </a> </div>
           
           <div v-if="bidPacketData.expirationFormatted != null"> expiration:  ~{{bidPacketData.expirationFormatted}} days </div>
           <div> status:  {{bidPacketData.status}}</div>
           <div> suspended:  {{bidPacketData.suspended}}</div>
 
+
+         <div v-cloak class="my-8 bg-red-200 p-2 md:flex md:flex-row" v-if="suspensionAlertVisible()">
+           
+           <div class=" flex-grow ">
+
+            <div class="font-bold text-lg"> This bid is suspended and inactive. </div>
+
+            <div v-if="!hasSufficientBalance()"> > There is not enough {{bidPacketData.currencyTokenName}} in your account. </div>
+            <div v-if="!bidCurrencyIsApproved()"> > There is not enough {{bidPacketData.currencyTokenName}} approved to the BuyTheFloor smart contract. </div>
+          </div>
+          <div class="  ">
+
+               <div class="w-1/2 px-4" @click="approveCurrencyToken" v-if="!bidCurrencyIsApproved()">
+                     <div class="select-none bg-teal-300 p-2 inline-block rounded border-black border-2 cursor-pointer"> Approve </div>
+                </div>
+
+             
+          </div>
+
+
+         </div>
+
            <div class="my-8">
 
-        <div @click="cancelBid()" v-if="userIsOwnerOfBid()" class="select-none bg-teal-300 p-2 inline-block rounded border-black border-2 cursor-pointer"> Cancel bid </div>
-           <a v-bind:href='"/sell/".concat(bidPacketData.nftContractName)' class="mx-2 select-none bg-teal-300 p-2 no-underline inline-block rounded border-black border-2 cursor-pointer text-black text-md"> Fulfill this bid </a>
+        <div v-cloak @click="cancelBid()" v-if="userIsOwnerOfBid() && !bidHasBeenBurned()" class="select-none bg-teal-300 p-2 inline-block rounded border-black border-2 cursor-pointer"> Cancel bid </div>
+           <a v-cloak v-if="!bidHasBeenBurned()"  v-bind:href='"/sell/".concat(bidPacketData.nftContractName)' class="mx-2 select-none bg-teal-300 p-2 no-underline inline-block rounded border-black border-2 cursor-pointer text-black text-md"> Fulfill this bid </a>
          
         </div>
 
@@ -62,12 +84,13 @@
 
           <div>  bidder: <a  target="_blank" v-bind:href="web3Plug.getExplorerLinkForAddress(bidPacketData.bidderAddress)">  {{bidPacketData.bidderAddress}} </a> </div>
           <div>  nftContractAddress: <a  target="_blank" v-bind:href="web3Plug.getExplorerLinkForAddress(bidPacketData.nftContractAddress)"> {{bidPacketData.nftContractAddress}} </a>  ( {{bidPacketData.nftContractName}} ) </div>
+          <div v-if="bidPacketData.requireProjectId">  projectId:    {{bidPacketData.projectId}}   </div>
           <div> currencyTokenAddress: <a  target="_blank" v-bind:href="web3Plug.getExplorerLinkForAddress(bidPacketData.currencyTokenAddress)"> {{bidPacketData.currencyTokenAddress}} </a>  ( {{bidPacketData.currencyTokenName}} ) </div>
             <div> currencyTokenAmount: {{bidPacketData.currencyTokenAmount}}   ( {{bidPacketData.currencyTokenAmountFormatted}} ) </div>
             <div> expires:  {{bidPacketData.expires}} <span v-if="bidPacketData.expirationFormatted != null">( ~{{bidPacketData.expirationFormatted}} days )</span> </div>
              <div> hash:  {{bidPacketData.hash}}</div>
 
-            <div> signature:  {{bidPacketData.signature.signature}}</div>
+            <div v-if="bidPacketData.signature"> signature:  {{bidPacketData.signature.signature}}</div>
             <div> status:  {{bidPacketData.status}}</div>
              <div> suspended:  {{bidPacketData.suspended}}</div>
 
@@ -110,17 +133,23 @@ import BidPacketUtils from '../js/bidpacket-utils.js'
 
 import BuyTheFloorHelper from '../js/buythefloor-helper.js'
 
-var BTFContractABI = require('../contracts/BuyTheFloorABI.json')
+var BTFContractABI = require('../contracts/BuyTheFloorABI_2.json')
 
 
 export default {
-  name: 'Home',
+  name: 'Bid',
   props: [],
   components: {Navbar, Footer},
   data() {
     return {
       web3Plug: new Web3Plug() ,
-      bidPacketData: {} 
+      bidPacketData: {} ,
+
+      tokenBalances:{},
+      tokensApproved:{},
+      currentBlockNumber: null,
+
+      ApproveAllAmount: "1000000000000000000000000000000",
     }
   },
   created: function () {
@@ -132,7 +161,9 @@ export default {
         this.activeNetworkId = connectionState.activeNetworkId
 
          this.fetchPacketData(this.$route.params.signature)
-         
+
+       
+
       }.bind(this));
    this.web3Plug.getPlugEventEmitter().on('error', function(errormessage) {
         console.error('error',errormessage);
@@ -144,6 +175,19 @@ export default {
       this.web3Plug.reconnectWeb()
 
       this.fetchPacketData(this.$route.params.signature)
+
+
+      setInterval( function(){
+
+        this.fetchPacketData(this.$route.params.signature)
+
+
+          if(this.web3Plug.connectedToWeb3() && this.userIsOwnerOfBid()){
+           this.updateBalances()
+         } 
+
+      }.bind(this),8000)
+
   }, 
    beforeDestroy(){
     this.web3Plug.clearEventEmitter()
@@ -180,7 +224,7 @@ export default {
         let contractData = this.web3Plug.getContractDataForNetworkID(chainId)
         let bidTheFloorAddress = contractData['buythefloor'].address
 
-        let typedData =  BidPacketUtils.getBidTypedDataFromParams( chainId , bidTheFloorAddress, this.bidPacketData.bidderAddress, this.bidPacketData.nftContractAddress, this.bidPacketData.currencyTokenAddress, this.bidPacketData.currencyTokenAmount, this.bidPacketData.expires   )
+        let typedData =  BidPacketUtils.getBidTypedDataFromParams( chainId , bidTheFloorAddress, this.bidPacketData.bidderAddress, this.bidPacketData.nftContractAddress, this.bidPacketData.currencyTokenAddress, this.bidPacketData.currencyTokenAmount,  this.bidPacketData.requireProjectId  ,this.bidPacketData.projectId, this.bidPacketData.expires   )
         
         if(chainId == parseInt(bidChainId)){
          this.bidPacketData.hash = BidPacketUtils.getBidTypedDataHash(typedData)
@@ -188,8 +232,8 @@ export default {
        
 
         
-        this.bidPacketData.nftContractName = BuyTheFloorHelper.getNameFromContractAddress(this.bidPacketData.nftContractAddress, chainId)
-        this.bidPacketData.currencyTokenName = BuyTheFloorHelper.getNameFromContractAddress(this.bidPacketData.currencyTokenAddress, chainId)
+        this.bidPacketData.nftContractName = BuyTheFloorHelper.getNameFromContractAddress(this.bidPacketData.nftContractAddress, this.bidPacketData.projectId, chainId)
+        this.bidPacketData.currencyTokenName = BuyTheFloorHelper.getNameFromContractAddress(this.bidPacketData.currencyTokenAddress, 0, chainId)
          
  
         
@@ -210,6 +254,12 @@ export default {
  
 
          console.log('fetched',this.bidPacketData)
+
+           if(this.web3Plug.connectedToWeb3() && this.userIsOwnerOfBid()){
+           this.updateBalances()
+         } 
+
+
      },
 
      async cancelBid(){
@@ -217,12 +267,75 @@ export default {
         let bidTheFloorAddress = contractData['buythefloor'].address
 
         let btfContract = this.web3Plug.getCustomContract(BTFContractABI,bidTheFloorAddress )
-         await btfContract.methods.cancelBid(this.bidPacketData.nftContractAddress, this.bidPacketData.bidderAddress,  this.bidPacketData.currencyTokenAddress, this.bidPacketData.currencyTokenAmount, this.bidPacketData.expires,this.bidPacketData.signature.signature ).send({from: this.web3Plug.getActiveAccountAddress()})
+         await btfContract.methods.cancelBid(this.bidPacketData.nftContractAddress, this.bidPacketData.bidderAddress,  this.bidPacketData.currencyTokenAddress, this.bidPacketData.currencyTokenAmount, this.bidPacketData.requireProjectId, this.bidPacketData.projectId,this.bidPacketData.expires,this.bidPacketData.signature.signature ).send({from: this.web3Plug.getActiveAccountAddress()})
      } ,
 
      userIsOwnerOfBid(){
-       return (this.bidPacketData.bidderAddress && this.bidPacketData.bidderAddress.toLowerCase() == this.web3Plug.getActiveAccountAddress())
+       return (this.bidPacketData && this.bidPacketData.bidderAddress && this.bidPacketData.bidderAddress.toLowerCase() == this.web3Plug.getActiveAccountAddress())
      },
+
+
+    hasSufficientBalance() {
+ 
+      return (this.tokenBalances[this.bidPacketData.currencyTokenAddress] >= parseInt(this.bidPacketData.currencyTokenAmount))
+    },
+
+     bidCurrencyIsApproved() {
+ 
+      return (this.tokensApproved[this.bidPacketData.currencyTokenAddress] >= parseInt(this.bidPacketData.currencyTokenAmount))
+    },
+
+     suspensionAlertVisible() {
+ 
+            return (this.currentBlockNumber && (!this.bidCurrencyIsApproved() || !this.hasSufficientBalance() )&& this.userIsOwnerOfBid() && this.web3Plug.connectedToWeb3())
+     },
+
+     bidHasBeenBurned(){
+       return this.bidPacketData.status == 'burned'
+     },
+
+
+      async updateBalances(){
+
+        console.log('update balances')
+          
+          let contractData = this.web3Plug.getContractDataForActiveNetwork()
+
+          let activeAddress = this.web3Plug.getActiveAccountAddress()
+          let currencyAddress = this.bidPacketData.currencyTokenAddress
+
+          
+
+          let btfContractAddress = contractData['buythefloor'].address
+
+          console.log('currencyAddress',currencyAddress)
+          
+          this.tokenBalances[currencyAddress] = await this.web3Plug.getTokenBalance(currencyAddress,activeAddress)
+          this.tokensApproved[currencyAddress] = await this.web3Plug.getTokenAllowance(currencyAddress,btfContractAddress,activeAddress)
+
+          this.currentBlockNumber = await this.web3Plug.getBlockNumber()
+        
+
+          console.log('approve', this.tokensApproved)
+          this.$forceUpdate()
+         }, 
+
+      async approveCurrencyToken(){
+
+           let contractData = this.web3Plug.getContractDataForActiveNetwork()
+
+              let activeAddress = this.web3Plug.getActiveAccountAddress()
+                let currencyAddress = this.bidPacketData.currencyTokenAddress
+
+              let btfContractAddress = contractData['buythefloor'].address
+              let currencyTokenContract = this.web3Plug.getTokenContract(currencyAddress)
+             
+             console.log('new approve' , btfContractAddress, this.ApproveAllAmount)
+              await currencyTokenContract.methods.approve(btfContractAddress, this.ApproveAllAmount ).send({from:activeAddress})
+
+
+      },
+
 
      getBidShareLink(type){
 

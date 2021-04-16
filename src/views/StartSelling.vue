@@ -31,21 +31,30 @@
 
              
 
-            <div v-if="!selectedNFTContractAddress">
-
-              <div class="text-xs  "> Select a type </div>
+            <div  >
 
 
-               <ArtTypeTile v-for="type of nftTypes"
-                v-bind:type="type"
-                v-bind:imageURL="type.imgurl" 
+              <NFTGallery 
+              ref="gallery"
+              v-bind:web3Plug="web3Plug"
               
-
               />
 
+
+
+
+
+              <div class="text-lg font-bold  mt-8  "> All NFT types </div>
+
+                   <ArtTypeTile v-for="type of nftTypes"
+                      v-bind:type="type"
+                      v-bind:imageURL="type.imgurl" 
+                    
+
+                    />
  
 
-          </div>
+              </div>
 
 
          
@@ -85,6 +94,7 @@ import Footer from './components/Footer.vue';
 
 import ArtTypeTile from './components/ArtTypeTile.vue'
  
+ import NFTGallery from './components/NFTGallery.vue'
 
 import NotConnectedToWeb3 from './components/NotConnectedToWeb3.vue'
 
@@ -93,14 +103,12 @@ import BuyTheFloorHelper from '../js/buythefloor-helper.js'
 export default {
   name: 'StartSelling',
   props: [],
-  components: {Navbar, Footer,NotConnectedToWeb3, ArtTypeTile },
+  components: {Navbar, Footer,NotConnectedToWeb3, ArtTypeTile, NFTGallery },
   data() {
     return {
       web3Plug: new Web3Plug() ,
       nftTypes:  [],
-      connectedToWeb3: false,
-      selectedNFTType: null,
-      selectedNFTContractAddress:null 
+      connectedToWeb3: false 
     }
   },
   async created  () {
@@ -113,8 +121,14 @@ export default {
          
         this.connectedToWeb3 = this.web3Plug.connectedToWeb3()
         this.nftTypes = BuyTheFloorHelper.getClientConfigForNetworkId(this.web3Plug.getActiveNetId()).nftTypes
-    
 
+        if(this.$refs.gallery){
+          this.$refs.gallery.fetchOwnedTokenIds()
+        }
+        
+
+
+        
       }.bind(this));
    this.web3Plug.getPlugEventEmitter().on('error', function(errormessage) {
         console.error('error',errormessage);
@@ -124,7 +138,7 @@ export default {
       }.bind(this));
 
 
-    await this.web3Plug.reconnectWeb()
+      this.web3Plug.reconnectWeb()
 
 
     let chainId = this.web3Plug.getActiveNetId()

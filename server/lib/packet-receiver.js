@@ -5,18 +5,27 @@
  import cors from 'cors'
 import fs from 'fs'
 
+import  history from 'connect-history-api-fallback'
+
+
 import PacketHelper from './packet-helper.js'
 import { Server } from "socket.io";
 
 import http from 'http'
 import https from 'https'
 
+import APIHelper from './api-helper.js'
+
 export default class PacketReceiver  {
 
-    constructor(web3, mongoInterface,serverConfig){
+    constructor(web3, mongoInterface,wolfpackInterface,serverConfig){
         this.mongoInterface = mongoInterface;
+        this.wolfpackInterface=wolfpackInterface;
         this.web3 = web3;
         this.serverConfig=serverConfig;
+
+
+        
 
         const app = express()
 
@@ -24,6 +33,7 @@ export default class PacketReceiver  {
 
         let envmode = process.env.NODE_ENV
 
+        var apiPort = 3000
 
         if(serverConfig.useHTTPS == true ){
           var server = https.createServer({
@@ -31,7 +41,9 @@ export default class PacketReceiver  {
             key: fs.readFileSync('/home/andy/deploy/cert/buythefloor.com.key')
           });
           console.log('--using https--')
+         
         }else{
+          
           var server = http.createServer(app);
         }
        
@@ -40,10 +52,68 @@ export default class PacketReceiver  {
  
          app.use(cors());
 
+
+          
+
+        
+
       
 
 
         this.startSocketServer(server)
+
+        this.startWebServer(app, apiPort)
+    }
+
+
+    async startWebServer(app, apiPort){
+
+
+     
+
+
+      app.get('/api/v1/:query', async (req, res) => {         
+          
+        let response = await APIHelper.handleApiRequest(null, req , this.mongoInterface, this.wolfpackInterface )
+
+        res.send(response)
+      })
+
+
+      app.get('/api/v1/bids/:useraddress', async (req, res) => {         
+          
+        let response = await APIHelper.handleApiRequest('userbids', req , this.mongoInterface, this.wolfpackInterface )
+
+        res.send(response)
+      })
+
+      const staticFileMiddleware = express.static('dist');
+      app.use(staticFileMiddleware);
+      app.use(history({
+        disableDotRule: true,
+        verbose: true
+      }));
+      app.use(staticFileMiddleware);
+
+
+
+      /*
+      app.get('/api/v1/:apikey/:query', async (req, res) => {
+         
+          
+        let response = await APIHelper.handleApiRequest( req , this.mongoInterface )
+
+        res.send(response)
+      })*/
+
+
+      app.listen(apiPort, () => {
+        console.log(`App listening at http://localhost:${apiPort}`)
+      })
+
+
+ 
+
     }
 
 
@@ -106,7 +176,7 @@ export default class PacketReceiver  {
     
                  let packet = data.packet 
     
-                console.log('got Websocket data', data  )
+              //  console.log('got Websocket data', data  )
     
           
 
@@ -116,6 +186,8 @@ export default class PacketReceiver  {
                         nftContractAddress: packet.nftContractAddress,
                         currencyTokenAddress: packet.currencyTokenAddress,
                         currencyTokenAmount: packet.currencyTokenAmount,
+                        requireProjectId: packet.requireProjectId,
+                        projectId: packet.projectId,
                         expires:packet.expires,
                         signature:packet.signature,
 
@@ -169,7 +241,7 @@ export default class PacketReceiver  {
 
 
               socket.on('bidPacket', async function (data) {
-                        console.log('findBidPacketBySignature', data)
+                //        console.log('findBidPacketBySignature', data)
                 var bidPackets = await PacketHelper.findBidPacketBySignature(data.signature, mongoInterface)
 
                
