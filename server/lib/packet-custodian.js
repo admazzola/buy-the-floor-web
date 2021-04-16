@@ -74,8 +74,7 @@ export default class PacketCustodian  {
 
         let RefreshWaitTime = (1 + allActivePackets.length)*1000//*GLOBAL_RATE_SCALE;  
 
-        console.log('RefreshWaitTime - bidpackets',RefreshWaitTime)
-
+        
         let activePackets = await this.mongoInterface.findAll('bidpackets', {status:'active', exchangeContractAddress:BTFContractAddress, lastRefreshed: { $lt: (timeNow - RefreshWaitTime  ) }   } )
 
       
@@ -184,17 +183,17 @@ export default class PacketCustodian  {
         if(tokenData && tokenData.synced && parseInt(tokenData.lastUpdated) >  (Date.now() - ONE_HOUR)){
 
             let balanceApprovalData = await APIHelper.getUserBalanceApprovalForToken( packet.bidderAddress, packet.currencyTokenAddress, BTFContractAddress, this.wolfpackInterface    )
-            console.log('monitoring bid with synced data ',balanceApprovalData )
+           // console.log('monitoring bid with synced data ',balanceApprovalData )
             
             tokenDataSynced = true
 
             if( new BigNumber(balanceApprovalData.balance).isLessThan(parseInt(packet.currencyTokenAmount))  ){
-                console.log('suspending', packet.currencyTokenAmount, balanceApprovalData.balance)
+               // console.log('suspending', packet.currencyTokenAmount, balanceApprovalData.balance)
                 isNowSuspended = true
             }
 
             if(  new BigNumber(balanceApprovalData.approved).isLessThan(parseInt(packet.currencyTokenAmount))    ){
-                console.log('suspending', packet.currencyTokenAmount, balanceApprovalData.approved)
+             //   console.log('suspending', packet.currencyTokenAmount, balanceApprovalData.approved)
                 isNowSuspended = true
                  
             }
@@ -208,7 +207,7 @@ export default class PacketCustodian  {
 
         }else{
 
-            console.log('WARN: tokendata not synced - requesting manual monitoring ', packet.currencyTokenAddress )
+            console.log('WARN: tokendata not synced - requesting manual monitoring '  )
             await PacketCustodian.requestMonitorBidderBalance( packet.bidderAddress, packet.currencyTokenAddress  , packet.chainId, this.serverConfig,  this.mongoInterface)
 
         }
@@ -251,7 +250,7 @@ export default class PacketCustodian  {
 
 
     async refreshAccount( bidderData ){
-        console.log(bidderData)
+        //console.log(bidderData)
         
         let balanceApprovalData = this.getBalanceAndApprovalDataForAccount(bidderData.publicAddress, bidderData.currencyTokenAddress, bidderData.currencyTokenChainId).then(async (value) => {
           
@@ -265,12 +264,12 @@ export default class PacketCustodian  {
                 let isNowSuspended = false 
     
                 if(parseInt(packet.currencyTokenAmount) > parseInt(balanceApprovalData.balance) ){
-                    console.log('suspending', packet.currencyTokenAmount, balanceApprovalData.balance)
+               //     console.log('suspending', packet.currencyTokenAmount, balanceApprovalData.balance)
                     isNowSuspended = true
                 }
     
                 if(parseInt(packet.currencyTokenAmount) > parseInt(balanceApprovalData.approved) ){
-                    console.log('suspending', packet.currencyTokenAmount, balanceApprovalData.balance)
+                 //   console.log('suspending', packet.currencyTokenAmount, balanceApprovalData.balance)
                     isNowSuspended = true
                 }
     
@@ -330,7 +329,7 @@ export default class PacketCustodian  {
         let web3 = this.web3
 
         if(parseInt(chainId) != parseInt(currencyTokenChainId)){
-            console.log('WARN: Invalid chain id for monitored account ', currencyTokenAddress, currencyTokenChainId)
+          //  console.log('WARN: Invalid chain id for monitored account ', currencyTokenAddress, currencyTokenChainId)
             return {balance:0,approved:0}
         }
 

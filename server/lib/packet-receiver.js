@@ -176,7 +176,7 @@ export default class PacketReceiver  {
     
                  let packet = data.packet 
     
-                console.log('got Websocket data', data  )
+              //  console.log('got Websocket data', data  )
     
           
 
@@ -241,7 +241,7 @@ export default class PacketReceiver  {
 
 
               socket.on('bidPacket', async function (data) {
-                        console.log('findBidPacketBySignature', data)
+                //        console.log('findBidPacketBySignature', data)
                 var bidPackets = await PacketHelper.findBidPacketBySignature(data.signature, mongoInterface)
 
                
