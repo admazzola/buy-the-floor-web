@@ -57,7 +57,7 @@ export default class PacketCustodian  {
     }
     
     async updatePackets( ){
-        console.log('updating packets')
+       // console.log('updating packets')
 
         //let overviewData = await APIHelper.getOverview(this.mongoInterface, this.wolfpackInterface)
 
